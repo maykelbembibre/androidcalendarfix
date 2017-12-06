@@ -20,6 +20,9 @@ import android.widget.SimpleCursorAdapter;
 import bembibre.alarmfix.database.RemindersDbAdapter;
 import bembibre.alarmfix.userinterface.UserInterfaceUtils;
 
+/**
+ * The main activity.
+ */
 public class ReminderListActivity extends ListActivity {
 
     private static final int ACTIVITY_CREATE = 0;
