@@ -1,0 +1,267 @@
+package bembibre.alarmfix;
+
+import android.app.Activity;
+import android.app.DatePickerDialog;
+import android.app.Dialog;
+import android.app.TimePickerDialog;
+import android.content.DialogInterface;
+import android.database.Cursor;
+import android.os.Bundle;
+import android.util.Log;
+import android.view.View;
+import android.widget.Button;
+import android.widget.DatePicker;
+import android.widget.EditText;
+import android.widget.TimePicker;
+import android.widget.Toast;
+
+import java.text.ParseException;
+import java.text.SimpleDateFormat;
+import java.util.Calendar;
+import java.util.Date;
+
+import bembibre.alarmfix.alarms.ReminderManager;
+import bembibre.alarmfix.database.RemindersDbAdapter;
+import bembibre.alarmfix.userinterface.UserInterfaceUtils;
+
+public class ReminderEditActivity extends Activity {
+
+    private static final String DATE_FORMAT = "yyyy-MM-dd";
+    private static final String TIME_FORMAT = "kk:mm";
+    public static final String DATE_TIME_FORMAT = "yyyy-MM-dd kk:mm:ss";
+
+    private static final int DATE_PICKER_DIALOG = 0;
+    private static final int TIME_PICKER_DIALOG = 1;
+
+    private RemindersDbAdapter mDbHelper;
+
+    /**
+     * The button of the user interface that the user uses for setting the date.
+     */
+    private Button mDateButton;
+
+    /**
+     * The button of the user interface that the user uses for setting the time.
+     */
+    private Button mTimeButton;
+
+    /**
+     * This object holds the date and time currently selected by the user for the reminder that is
+     * being created or modified.
+     */
+    private Calendar mCalendar;
+
+    private EditText mTitleText;
+    private Button mConfirmButton;
+    private EditText mBodyText;
+
+    private Long mRowId;
+
+    @Override
+    protected void onCreate(Bundle savedInstanceState) {
+        super.onCreate(savedInstanceState);
+
+        mDbHelper = RemindersDbAdapter.getInstance(this);
+
+        setContentView(R.layout.reminder_edit);
+
+        mDateButton = (Button) findViewById(R.id.reminder_date);
+        mTimeButton = (Button) findViewById(R.id.reminder_time);
+        mCalendar = Calendar.getInstance();
+        mConfirmButton = (Button) findViewById(R.id.confirm);
+        mTitleText = (EditText) findViewById(R.id.title);
+        mBodyText = (EditText) findViewById(R.id.body);
+
+        mRowId = savedInstanceState != null
+                ? savedInstanceState.getLong(RemindersDbAdapter.KEY_ROWID)
+                : null;
+
+        registerButtonListenersAndSetDefaultText();
+    }
+
+    private void setRowIdFromIntent() {
+        if (mRowId == null) {
+            Bundle extras = getIntent().getExtras();
+            mRowId = extras != null
+                    ? extras.getLong(RemindersDbAdapter.KEY_ROWID)
+                    : null;
+        }
+    }
+
+    @Override
+    protected void onPause() {
+        super.onPause();
+        mDbHelper.close();
+    }
+
+    @Override
+    protected void onResume() {
+        super.onResume();
+        mDbHelper.open();
+        setRowIdFromIntent();
+        populateFields();
+    }
+
+    // Date picker, button click events, and buttonText updating, createDialog
+    // left out for brevity
+    // they normally go here ...
+    private void populateFields() {
+        if (mRowId != null) {
+            Cursor reminder = mDbHelper.fetchReminder(mRowId);
+            if (reminder.getCount() < 1) {
+                DialogInterface.OnClickListener listener = new DialogInterface.OnClickListener() {
+                    public void onClick(DialogInterface dialog, int which) {
+                        dialog.dismiss();
+                        ReminderEditActivity.this.finish();
+                    }
+                };
+                UserInterfaceUtils.showDialog(this, R.string.reminder_does_not_exist, listener);
+
+            } else {
+                startManagingCursor(reminder);
+                mTitleText.setText(reminder.getString(
+                        reminder.getColumnIndexOrThrow(RemindersDbAdapter.KEY_TITLE)));
+                mBodyText.setText(reminder.getString(
+                        reminder.getColumnIndexOrThrow(RemindersDbAdapter.KEY_BODY)));
+                SimpleDateFormat dateTimeFormat = new SimpleDateFormat(DATE_TIME_FORMAT);
+                Date date = null;
+                try {
+                    String dateString = reminder.getString(
+                            reminder.getColumnIndexOrThrow(
+                                    RemindersDbAdapter.KEY_DATE_TIME));
+                    date = dateTimeFormat.parse(dateString);
+                    mCalendar.setTime(date);
+                } catch (ParseException e) {
+                    Log.e("ReminderEditActivity", e.getMessage(), e);
+                }
+            }
+        }
+        updateDateButtonText();
+        updateTimeButtonText();
+    }
+
+    /**
+     * This gets called whenever this activity is killed for any reason. It saves all that will be
+     * needed for restoring the previous state of the activity.
+     * @param outState where the necessary information is saved for the future.
+     */
+    @Override
+    protected void onSaveInstanceState(Bundle outState) {
+        super.onSaveInstanceState(outState);
+        outState.putLong(RemindersDbAdapter.KEY_ROWID, mRowId);
+    }
+
+    private void saveState() {
+        String title = mTitleText.getText().toString();
+        String body = mBodyText.getText().toString();
+        SimpleDateFormat dateTimeFormat = new SimpleDateFormat(DATE_TIME_FORMAT);
+        String reminderDateTime =
+                dateTimeFormat.format(mCalendar.getTime());
+        if (mRowId == null) {
+            long id = mDbHelper.createReminder(title, body, reminderDateTime);
+
+            if (id > 0) {
+                mRowId = id;
+            }
+        } else {
+            mDbHelper.updateReminder(mRowId, title, body, reminderDateTime);
+        }
+        new ReminderManager(this).setReminder(mRowId, mCalendar);
+    }
+
+    private void registerButtonListenersAndSetDefaultText(){
+        mDateButton.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                showDialog(DATE_PICKER_DIALOG);
+            }
+        });
+        mTimeButton.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                showDialog(TIME_PICKER_DIALOG);
+            }
+        });
+        mConfirmButton.setOnClickListener(new View.OnClickListener() {
+            public void onClick(View view) {
+                saveState();
+                setResult(RESULT_OK);
+                Toast.makeText(ReminderEditActivity.this,
+                        getString(R.string.task_saved_message),
+                        Toast.LENGTH_SHORT).show();
+                finish();
+            }
+        });
+        updateDateButtonText();
+        updateTimeButtonText();
+    }
+
+    @Override
+    protected Dialog onCreateDialog(int id) {
+        switch(id) {
+            case DATE_PICKER_DIALOG:
+                return showDatePicker();
+            case TIME_PICKER_DIALOG:
+                return showTimePicker();
+        }
+        return super.onCreateDialog(id);
+    }
+
+    /**
+     * Creates a small window in the user interface that allows to select a date.
+     *
+     * @return the small window.
+     */
+    private DatePickerDialog showDatePicker() {
+        DatePickerDialog datePicker = new DatePickerDialog(ReminderEditActivity.this,
+                new DatePickerDialog.OnDateSetListener() {
+                    @Override
+                    public void onDateSet(DatePicker view, int year, int monthOfYear,
+                                          int dayOfMonth) {
+                        mCalendar.set(Calendar.YEAR, year);
+                        mCalendar.set(Calendar.MONTH, monthOfYear);
+                        mCalendar.set(Calendar.DAY_OF_MONTH, dayOfMonth);
+                        updateDateButtonText();
+                    }
+                }, mCalendar.get(Calendar.YEAR), mCalendar.get(Calendar.MONTH),
+                mCalendar.get(Calendar.DAY_OF_MONTH));
+        return datePicker;
+    }
+
+    /**
+     * Creates a small window in the user interface that allows to select a time.
+     *
+     * @return the small window.
+     */
+    private TimePickerDialog showTimePicker() {
+        TimePickerDialog timePicker = new TimePickerDialog(this, new
+                TimePickerDialog.OnTimeSetListener() {
+                    @Override
+                    public void onTimeSet(TimePicker view, int hourOfDay, int minute){
+                        mCalendar.set(Calendar.HOUR_OF_DAY, hourOfDay);
+                        mCalendar.set(Calendar.MINUTE, minute);
+                        updateTimeButtonText();
+                    }
+                }, mCalendar.get(Calendar.HOUR_OF_DAY),
+                mCalendar.get(Calendar.MINUTE), true);
+        return timePicker;
+    }
+
+    /**
+     * Makes the date button to show the date that has been previously selected by the user.
+     */
+    private void updateDateButtonText() {
+        SimpleDateFormat dateFormat = new SimpleDateFormat(DATE_FORMAT);
+        String dateForButton = dateFormat.format(mCalendar.getTime());
+        mDateButton.setText(dateForButton);
+    }
+
+    /**
+     * Makes the time button to show the time that has been previously selected by the user.
+     */
+    private void updateTimeButtonText() {
+        SimpleDateFormat timeFormat = new SimpleDateFormat(TIME_FORMAT);
+        String timeForButton = timeFormat.format(mCalendar.getTime());
+        mTimeButton.setText(timeForButton);
+    }
+}

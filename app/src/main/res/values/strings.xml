@@ -1,0 +1,17 @@
+<resources>
+    <string name="app_name">Alarm Fix</string>
+    <string name="options_menu_text">Options</string>
+    <string name="alert_dialog_title">Warning</string>
+    <string name="reminder_does_not_exist">You have been notified of a reminder that you erased, so the application will exit because there is nothing to do.</string>
+    <string name="no_reminders">The reminders list is empty.</string>
+    <string name="title">Title</string>
+    <string name="body">Body</string>
+    <string name="date">Date</string>
+    <string name="time">Time</string>
+    <string name="confirm">Confirm</string>
+    <string name="menu_insert">Add reminder</string>
+    <string name="menu_delete">Delete this element</string>
+    <string name="task_saved_message">Task saved successfully</string>
+    <string name="notifiy_new_task_title">Reminder</string>
+    <string name="notify_new_task_message">New reminder</string>
+</resources>
