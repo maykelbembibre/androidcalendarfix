@@ -3,20 +3,17 @@ package bembibre.alarmfix;
 import android.app.ListActivity;
 import android.content.Intent;
 import android.database.Cursor;
-import android.graphics.Color;
 import android.os.Bundle;
-import android.text.SpannableString;
-import android.text.style.ForegroundColorSpan;
 import android.view.ContextMenu;
 import android.view.Menu;
 import android.view.MenuInflater;
 import android.view.MenuItem;
 import android.view.View;
 import android.widget.AdapterView;
-import android.widget.ArrayAdapter;
 import android.widget.ListView;
 import android.widget.SimpleCursorAdapter;
 
+import bembibre.alarmfix.alarms.ReminderManager;
 import bembibre.alarmfix.database.RemindersDbAdapter;
 import bembibre.alarmfix.userinterface.UserInterfaceUtils;
 
@@ -125,7 +122,15 @@ public class ReminderListActivity extends ListActivity {
                 // Delete the task
                 AdapterView.AdapterContextMenuInfo info =
                         (AdapterView.AdapterContextMenuInfo) item.getMenuInfo();
+                Cursor cursor = mDbHelper.fetchReminder(info.id);
+                String date;
+                if ((cursor != null) && (cursor.moveToFirst())) {
+                    date = cursor.getString(cursor.getColumnIndex(RemindersDbAdapter.KEY_DATE_TIME));
+                } else {
+                    date = "unknown";
+                }
                 mDbHelper.deleteReminder(info.id);
+                new ReminderManager(this).unsetReminder(info.id, date);
                 fillData();
                 return true;
         }

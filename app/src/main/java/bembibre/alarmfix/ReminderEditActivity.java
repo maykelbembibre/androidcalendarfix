@@ -13,27 +13,26 @@ import android.widget.Button;
 import android.widget.DatePicker;
 import android.widget.EditText;
 import android.widget.TimePicker;
-import android.widget.Toast;
 
 import java.text.ParseException;
 import java.text.SimpleDateFormat;
 import java.util.Calendar;
 import java.util.Date;
 
-import bembibre.alarmfix.alarms.ReminderManager;
+import bembibre.alarmfix.alarms.SynchronizedWork;
 import bembibre.alarmfix.database.RemindersDbAdapter;
 import bembibre.alarmfix.userinterface.UserInterfaceUtils;
+import bembibre.alarmfix.utils.GeneralUtils;
 
 public class ReminderEditActivity extends Activity {
 
     private static final String DATE_FORMAT = "yyyy-MM-dd";
     private static final String TIME_FORMAT = "kk:mm";
-    public static final String DATE_TIME_FORMAT = "yyyy-MM-dd kk:mm:ss";
 
     private static final int DATE_PICKER_DIALOG = 0;
     private static final int TIME_PICKER_DIALOG = 1;
 
-    private RemindersDbAdapter mDbHelper;
+    public RemindersDbAdapter mDbHelper;
 
     /**
      * The button of the user interface that the user uses for setting the date.
@@ -49,13 +48,13 @@ public class ReminderEditActivity extends Activity {
      * This object holds the date and time currently selected by the user for the reminder that is
      * being created or modified.
      */
-    private Calendar mCalendar;
+    public Calendar mCalendar;
 
     private EditText mTitleText;
     private Button mConfirmButton;
     private EditText mBodyText;
 
-    private Long mRowId;
+    public Long mRowId;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -123,7 +122,7 @@ public class ReminderEditActivity extends Activity {
                         reminder.getColumnIndexOrThrow(RemindersDbAdapter.KEY_TITLE)));
                 mBodyText.setText(reminder.getString(
                         reminder.getColumnIndexOrThrow(RemindersDbAdapter.KEY_BODY)));
-                SimpleDateFormat dateTimeFormat = new SimpleDateFormat(DATE_TIME_FORMAT);
+                SimpleDateFormat dateTimeFormat = new SimpleDateFormat(GeneralUtils.DATE_TIME_FORMAT);
                 Date date = null;
                 try {
                     String dateString = reminder.getString(
@@ -154,19 +153,10 @@ public class ReminderEditActivity extends Activity {
     private void saveState() {
         String title = mTitleText.getText().toString();
         String body = mBodyText.getText().toString();
-        SimpleDateFormat dateTimeFormat = new SimpleDateFormat(DATE_TIME_FORMAT);
+        SimpleDateFormat dateTimeFormat = new SimpleDateFormat(GeneralUtils.DATE_TIME_FORMAT);
         String reminderDateTime =
                 dateTimeFormat.format(mCalendar.getTime());
-        if (mRowId == null) {
-            long id = mDbHelper.createReminder(title, body, reminderDateTime);
-
-            if (id > 0) {
-                mRowId = id;
-            }
-        } else {
-            mDbHelper.updateReminder(mRowId, title, body, reminderDateTime);
-        }
-        new ReminderManager(this).setReminder(mRowId, mCalendar);
+        SynchronizedWork.reminderCreatedOrUpdated(this, title, body, reminderDateTime);
     }
 
     private void registerButtonListenersAndSetDefaultText(){
@@ -184,12 +174,10 @@ public class ReminderEditActivity extends Activity {
         });
         mConfirmButton.setOnClickListener(new View.OnClickListener() {
             public void onClick(View view) {
-                saveState();
                 setResult(RESULT_OK);
-                Toast.makeText(ReminderEditActivity.this,
-                        getString(R.string.task_saved_message),
-                        Toast.LENGTH_SHORT).show();
-                finish();
+
+                // This method finally finishes this activity.
+                saveState();
             }
         });
         updateDateButtonText();

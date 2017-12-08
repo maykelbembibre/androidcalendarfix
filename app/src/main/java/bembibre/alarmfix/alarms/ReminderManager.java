@@ -9,6 +9,8 @@ import android.os.Build;
 import java.util.Calendar;
 
 import bembibre.alarmfix.database.RemindersDbAdapter;
+import bembibre.alarmfix.logging.Logger;
+import bembibre.alarmfix.utils.GeneralUtils;
 
 /**
  * Created by Max Power on 12/08/2017.
@@ -31,13 +33,53 @@ public class ReminderManager {
      * @param taskId data base identifier of the reminder.
      * @param when when.
      */
-    public void setReminder(Long taskId, Calendar when) {
+    public void setReminder(long taskId, Calendar when) throws AlarmException {
+        PendingIntent pi = getReminderPendingIntent(taskId, PendingIntent.FLAG_ONE_SHOT);
+
+        try {
+            this.setAlarm(pi, when);
+            Logger.log("An alarm has been set successfully for the reminder at " + GeneralUtils.format(when));
+        } catch (Throwable throwable) {
+            Logger.log("The system doesn't let us to set an alarm for the reminder at " + GeneralUtils.format(when), throwable);
+            throw new AlarmException();
+        }
+    }
+
+    /**
+     * Unsets the alarm that would trigger for the reminder with the given database identifier.
+     * When calling this method, the reminder could have been erased from the database and it
+     * wouldn't be a problem. This method is only for unsetting its associated alarm from the
+     * system.
+     * @param taskId database identifier of the reminder.
+     * @param date date for logging purposes.
+     */
+    public void unsetReminder(long taskId, String date) {
+        PendingIntent pi = getReminderPendingIntent(taskId, PendingIntent.FLAG_UPDATE_CURRENT);
+        mAlarmManager.cancel(pi);
+        Logger.log("An alarm has been unset successfully for the reminder at " + date);
+    }
+
+    /**
+     * Returns the <code>PendingIntent</code> object that must be used for calling this application
+     * when a reminder's alarm triggers.
+     * @param taskId the number that identifies the associated reminder in the database.
+     * @return the <code>PendingIntent</code> object.
+     */
+    private PendingIntent getReminderPendingIntent(long taskId, int flag) {
         Intent i = new Intent(mContext, OnAlarmReceiver.class);
-        i.putExtra(RemindersDbAdapter.KEY_ROWID, (long)taskId);
+        i.putExtra(RemindersDbAdapter.KEY_ROWID, taskId);
         PendingIntent pi =
                 PendingIntent.getBroadcast(mContext, 0, i,
-                        PendingIntent.FLAG_ONE_SHOT);
+                        flag);
+        return pi;
+    }
 
+    /**
+     * Sets the alarm in the operating system.
+     * @param operation
+     * @param when
+     */
+    private void setAlarm(PendingIntent operation, Calendar when) throws Throwable {
         /*
          * The alarm must be set differently depending on the OS version. Anyway, we need the
          * pending intent in order to know what was the reminder for which the alarm was fired, so
@@ -45,7 +87,7 @@ public class ReminderManager {
          */
         if (Build.VERSION.SDK_INT < Build.VERSION_CODES.M) {
             // Before Marshmallow, we can do this for setting a reliable alarm.
-            mAlarmManager.set(AlarmManager.RTC_WAKEUP, when.getTimeInMillis(), pi);
+            mAlarmManager.set(AlarmManager.RTC_WAKEUP, when.getTimeInMillis(), operation);
         } else {
             /*
              * Starting from Marshmallow, it seems like this is the only way for setting a reliable
@@ -54,7 +96,7 @@ public class ReminderManager {
              * If we use the setExactAndAllowWhileIdle the user will see nothing, but the OS can
              * delay alarms at some sort of situations.
              */
-            mAlarmManager.setExactAndAllowWhileIdle(AlarmManager.RTC_WAKEUP, when.getTimeInMillis(), pi);
+            mAlarmManager.setExactAndAllowWhileIdle(AlarmManager.RTC_WAKEUP, when.getTimeInMillis(), operation);
         }
     }
 }

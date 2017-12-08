@@ -3,6 +3,7 @@
     <string name="options_menu_text">Options</string>
     <string name="alert_dialog_title">Warning</string>
     <string name="reminder_does_not_exist">You have been notified of a reminder that you erased, so the application will exit because there is nothing to do.</string>
+    <string name="unable_to_set_alarm">The system doesn\'t let us to set a new reminder right now. Perhaps you should delete old reminders for having free space. I don\'t know.</string>
     <string name="no_reminders">The reminders list is empty.</string>
     <string name="title">Title</string>
     <string name="body">Body</string>

@@ -14,6 +14,7 @@ import android.view.Menu;
 import android.view.MenuItem;
 
 import bembibre.alarmfix.R;
+import bembibre.alarmfix.ReminderEditActivity;
 
 /**
  * Utilities class for user interface details that are too complex to design other way.
@@ -38,9 +39,10 @@ public class UserInterfaceUtils {
     }
 
     /**
-     * Shows a simple alert dialog.
-     * @param context
-     * @param messageResourceId
+     * Shows a simple alert dialog that makes an action when the user clicks the OK button.
+     * @param context the application context.
+     * @param messageResourceId ID of the string to show inside of the dialog.
+     * @param listener the action that will be performed when the user clicks the OK button.
      */
     public static void showDialog(Context context, int messageResourceId, DialogInterface.OnClickListener listener) {
         AlertDialog alertDialog = new AlertDialog.Builder(context).create();
@@ -49,5 +51,19 @@ public class UserInterfaceUtils {
         alertDialog.setButton(AlertDialog.BUTTON_NEUTRAL, "OK", listener);
 
         alertDialog.show();
+    }
+
+    /**
+     * Shows a dialog that does nothing when the user clicks the OK button.
+     * @param context the application context.
+     * @param messageResourceId ID of the string to show inside of the dialog.
+     */
+    public static void showSimpleDialog(Context context, int messageResourceId) {
+        DialogInterface.OnClickListener listener = new DialogInterface.OnClickListener() {
+            public void onClick(DialogInterface dialog, int which) {
+                dialog.dismiss();
+            }
+        };
+        UserInterfaceUtils.showDialog(context, R.string.reminder_does_not_exist, listener);
     }
 }

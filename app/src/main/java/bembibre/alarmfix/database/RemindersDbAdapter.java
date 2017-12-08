@@ -19,16 +19,18 @@ public class RemindersDbAdapter {
     private static final int DATABASE_VERSION = 1;
     public static final String KEY_TITLE = "title";
     public static final String KEY_BODY = "body";
+    public static final String KEY_NOTIFIED = "notified";
     public static final String KEY_DATE_TIME = "reminder_date_time";
     public static final String KEY_ROWID = "_id";
     private DatabaseHelper mDbHelper;
     private SQLiteDatabase mDb;
     private static final String DATABASE_CREATE =
             "create table " + DATABASE_TABLE + " ("
-            + KEY_ROWID + " integer primary key autoincrement, "
-            + KEY_TITLE + " text not null, "
-            + KEY_BODY + " text not null, "
-            + KEY_DATE_TIME + " text not null);";
+                    + KEY_ROWID + " integer primary key autoincrement, "
+                    + KEY_TITLE + " text not null, "
+                    + KEY_BODY + " text not null, "
+                    + KEY_NOTIFIED + " integer, "
+                    + KEY_DATE_TIME + " text not null);";
     private final Context mCtx;
 
     private static RemindersDbAdapter instance;
@@ -84,11 +86,33 @@ public class RemindersDbAdapter {
         }
     }
 
+    /**
+     * Begins a database transaction: remember to finish it at the finally part of a try/catch/finally block.
+     */
+    public void beginTransaction() {
+        this.mDb.beginTransaction();
+    }
+
+    /**
+     * Commits the current transaction.
+     */
+    public void setTransactionSuccessful() {
+        this.mDb.setTransactionSuccessful();
+    }
+
+    /**
+     * Ends the current transaction.
+     */
+    public void endTransaction() {
+        this.mDb.endTransaction();
+    }
+
     public long createReminder(String title, String body, String
             reminderDateTime) {
         ContentValues initialValues = new ContentValues();
         initialValues.put(KEY_TITLE, title);
         initialValues.put(KEY_BODY, body);
+        initialValues.put(KEY_NOTIFIED, false);
         initialValues.put(KEY_DATE_TIME, reminderDateTime);
         return mDb.insert(DATABASE_TABLE, null, initialValues);
     }
@@ -99,7 +123,7 @@ public class RemindersDbAdapter {
 
     public Cursor fetchAllReminders() {
         return mDb.query(DATABASE_TABLE, new String[] {KEY_ROWID, KEY_TITLE,
-                KEY_BODY, KEY_DATE_TIME}, null, null, null, null, null);
+                KEY_BODY, KEY_NOTIFIED, KEY_DATE_TIME}, null, null, null, null, null);
     }
 
     public Cursor fetchReminder(long rowId) throws SQLException {
@@ -119,7 +143,21 @@ public class RemindersDbAdapter {
         ContentValues args = new ContentValues();
         args.put(KEY_TITLE, title);
         args.put(KEY_BODY, body);
+        args.put(KEY_NOTIFIED, 0);
         args.put(KEY_DATE_TIME, reminderDateTime);
+        return
+                mDb.update(DATABASE_TABLE, args, KEY_ROWID + "=" + rowId, null) > 0;
+    }
+
+    public boolean updateReminder(long rowId, boolean notified) {
+        ContentValues args = new ContentValues();
+        int notifiedAsInt;
+        if (notified) {
+            notifiedAsInt = 1;
+        } else {
+            notifiedAsInt = 0;
+        }
+        args.put(KEY_NOTIFIED, notifiedAsInt);
         return
                 mDb.update(DATABASE_TABLE, args, KEY_ROWID + "=" + rowId, null) > 0;
     }

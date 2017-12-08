@@ -5,6 +5,7 @@ import android.content.Context;
 import android.content.Intent;
 
 import bembibre.alarmfix.database.RemindersDbAdapter;
+import bembibre.alarmfix.logging.Logger;
 
 /**
  * Created by Max Power on 12/08/2017.
@@ -16,6 +17,7 @@ import bembibre.alarmfix.database.RemindersDbAdapter;
 public class OnAlarmReceiver extends BroadcastReceiver {
     @Override
     public void onReceive(Context context, Intent intent) {
+        Logger.log("An alarm has been received right now.");
         long rowid =
                 intent.getExtras().getLong(RemindersDbAdapter.KEY_ROWID);
         WakeReminderIntentService.acquireStaticLock(context);
