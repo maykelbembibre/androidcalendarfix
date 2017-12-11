@@ -13,8 +13,9 @@ import android.widget.AdapterView;
 import android.widget.ListView;
 import android.widget.SimpleCursorAdapter;
 
-import bembibre.alarmfix.alarms.ReminderManager;
+import bembibre.alarmfix.logic.SynchronizedWork;
 import bembibre.alarmfix.database.RemindersDbAdapter;
+import bembibre.alarmfix.userinterface.ReminderListCursorAdapter;
 import bembibre.alarmfix.userinterface.UserInterfaceUtils;
 
 /**
@@ -49,7 +50,7 @@ public class ReminderListActivity extends ListActivity {
     /**
      * Loads the reminder list from the database and makes it to be shown in the screen.
      */
-    private void fillData() {
+    public void fillData() {
         // It is necessary to close gracefully previous data if it exists.
         if (this.remindersCursor != null) {
             stopManagingCursor(this.remindersCursor);
@@ -58,12 +59,12 @@ public class ReminderListActivity extends ListActivity {
         this.remindersCursor = mDbHelper.fetchAllReminders();
         startManagingCursor(remindersCursor);
         // Create an array to specify the fields we want (only the TITLE)
-        String[] from = new String[]{RemindersDbAdapter.KEY_TITLE};
+        String[] from = new String[]{RemindersDbAdapter.KEY_TITLE, RemindersDbAdapter.KEY_DATE_TIME};
         // and an array of the fields we want to bind in the view
-        int[] to = new int[]{R.id.text1};
+        int[] to = new int[]{R.id.text1, R.id.text2};
         // Now create a simple cursor adapter and set it to display
         SimpleCursorAdapter reminders =
-                new SimpleCursorAdapter(this, R.layout.reminder_row,
+                new ReminderListCursorAdapter(this, R.layout.reminder_row,
                         remindersCursor, from, to);
         setListAdapter(reminders);
     }
@@ -122,16 +123,12 @@ public class ReminderListActivity extends ListActivity {
                 // Delete the task
                 AdapterView.AdapterContextMenuInfo info =
                         (AdapterView.AdapterContextMenuInfo) item.getMenuInfo();
-                Cursor cursor = mDbHelper.fetchReminder(info.id);
-                String date;
-                if ((cursor != null) && (cursor.moveToFirst())) {
-                    date = cursor.getString(cursor.getColumnIndex(RemindersDbAdapter.KEY_DATE_TIME));
-                } else {
-                    date = "unknown";
-                }
-                mDbHelper.deleteReminder(info.id);
-                new ReminderManager(this).unsetReminder(info.id, date);
-                fillData();
+
+                /*
+                 * info.id is the database identifier of the reminder to be deleted.
+                 * It's magic.
+                 */
+                SynchronizedWork.reminderDeleted(this, this.mDbHelper, info.id);
                 return true;
         }
         return super.onContextItemSelected(item);

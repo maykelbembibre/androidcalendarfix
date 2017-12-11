@@ -31,10 +31,10 @@ public class Logger {
     }
 
     public static void log(Throwable t) {
-        StringBuffer stringBuffer = new StringBuffer(" Ocurrió una excepción: " + t.getClass().getName() + "\n");
+        StringBuffer stringBuffer = new StringBuffer("An exception happened: " + t.getClass().getName() + "\n");
         String detailMessage = t.getMessage();
         if ((detailMessage != null) && (!detailMessage.isEmpty())) {
-            stringBuffer.append("Descripción del error: " + detailMessage + "\n");
+            stringBuffer.append("Error description: " + detailMessage + "\n");
         }
         StackTraceElement[] stackTraceElements = t.getStackTrace();
         if (stackTraceElements != null) {
@@ -52,7 +52,7 @@ public class Logger {
     }
 
     public static void log(String message, Throwable t) {
-        Logger.log(message + " - Acompañando a este error se produjo la siguiente excepción:\n");
+        Logger.log(message + " - Along with this error the following exception happened:\n");
         Logger.log(t);
     }
 
@@ -60,7 +60,7 @@ public class Logger {
         File log = Logger.getCurrentFile();
         if (log == null) {
             // La hemos jodido.
-            System.out.println("No hay acceso de escritura a la memoria interna del dispositivo.");
+            System.out.println("There isn't access to the internal memory.");
         } else {
             FileOutputStream outputStream = null;
             OutputStreamWriter writer = null;

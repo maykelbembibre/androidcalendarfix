@@ -7,4 +7,6 @@
     <color name="actionBarBackground">#1856ff</color>
     <color name="actionBarForeground">#ffffff</color>
     <color name="menuTextColor">#ffffff</color>
+
+    <color name="notifiedReminder">#a2ff8b</color>
 </resources>

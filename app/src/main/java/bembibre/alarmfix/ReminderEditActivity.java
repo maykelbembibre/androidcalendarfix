@@ -19,8 +19,10 @@ import java.text.SimpleDateFormat;
 import java.util.Calendar;
 import java.util.Date;
 
-import bembibre.alarmfix.alarms.SynchronizedWork;
+import bembibre.alarmfix.logging.Logger;
+import bembibre.alarmfix.logic.SynchronizedWork;
 import bembibre.alarmfix.database.RemindersDbAdapter;
+import bembibre.alarmfix.models.DateTime;
 import bembibre.alarmfix.userinterface.UserInterfaceUtils;
 import bembibre.alarmfix.utils.GeneralUtils;
 
@@ -53,6 +55,7 @@ public class ReminderEditActivity extends Activity {
     private EditText mTitleText;
     private Button mConfirmButton;
     private EditText mBodyText;
+    private long alarmId;
 
     public Long mRowId;
 
@@ -67,6 +70,7 @@ public class ReminderEditActivity extends Activity {
         mDateButton = (Button) findViewById(R.id.reminder_date);
         mTimeButton = (Button) findViewById(R.id.reminder_time);
         mCalendar = Calendar.getInstance();
+        mCalendar.set(Calendar.SECOND, 0);
         mConfirmButton = (Button) findViewById(R.id.confirm);
         mTitleText = (EditText) findViewById(R.id.title);
         mBodyText = (EditText) findViewById(R.id.body);
@@ -114,6 +118,7 @@ public class ReminderEditActivity extends Activity {
                         ReminderEditActivity.this.finish();
                     }
                 };
+                Logger.log("Attempt to open the edition activity with a reminder that does not exist, its identifier is: " + this.mRowId);
                 UserInterfaceUtils.showDialog(this, R.string.reminder_does_not_exist, listener);
 
             } else {
@@ -122,17 +127,12 @@ public class ReminderEditActivity extends Activity {
                         reminder.getColumnIndexOrThrow(RemindersDbAdapter.KEY_TITLE)));
                 mBodyText.setText(reminder.getString(
                         reminder.getColumnIndexOrThrow(RemindersDbAdapter.KEY_BODY)));
+                alarmId = reminder.getLong(reminder.getColumnIndexOrThrow(RemindersDbAdapter.KEY_ALARM_ID));
                 SimpleDateFormat dateTimeFormat = new SimpleDateFormat(GeneralUtils.DATE_TIME_FORMAT);
-                Date date = null;
-                try {
-                    String dateString = reminder.getString(
-                            reminder.getColumnIndexOrThrow(
-                                    RemindersDbAdapter.KEY_DATE_TIME));
-                    date = dateTimeFormat.parse(dateString);
-                    mCalendar.setTime(date);
-                } catch (ParseException e) {
-                    Log.e("ReminderEditActivity", e.getMessage(), e);
-                }
+                long reminderDateTime = reminder.getLong(
+                        reminder.getColumnIndexOrThrow(
+                                RemindersDbAdapter.KEY_DATE_TIME));
+                mCalendar.setTime(new Date(reminderDateTime));
             }
         }
         updateDateButtonText();
@@ -153,10 +153,11 @@ public class ReminderEditActivity extends Activity {
     private void saveState() {
         String title = mTitleText.getText().toString();
         String body = mBodyText.getText().toString();
-        SimpleDateFormat dateTimeFormat = new SimpleDateFormat(GeneralUtils.DATE_TIME_FORMAT);
-        String reminderDateTime =
-                dateTimeFormat.format(mCalendar.getTime());
-        SynchronizedWork.reminderCreatedOrUpdated(this, title, body, reminderDateTime);
+        DateTime reminderDateTime = new DateTime(mCalendar.getTime().getTime());
+        if ((title == null) || (title.isEmpty())) {
+            title = this.getResources().getString(R.string.default_reminder_title);
+        }
+        SynchronizedWork.reminderCreatedOrUpdated(this, title, body, reminderDateTime, this.alarmId);
     }
 
     private void registerButtonListenersAndSetDefaultText(){
@@ -228,6 +229,7 @@ public class ReminderEditActivity extends Activity {
                     public void onTimeSet(TimePicker view, int hourOfDay, int minute){
                         mCalendar.set(Calendar.HOUR_OF_DAY, hourOfDay);
                         mCalendar.set(Calendar.MINUTE, minute);
+                        mCalendar.set(Calendar.SECOND, 0);
                         updateTimeButtonText();
                     }
                 }, mCalendar.get(Calendar.HOUR_OF_DAY),
