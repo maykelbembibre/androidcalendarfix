@@ -18,4 +18,6 @@
     <string name="notify_multiple_reminders_title">You\'ve got %1$d pending reminders</string>
     <string name="default_reminder_title">(No title)</string>
     <string name="date_time_readable_format">yyyy-MM-dd kk:mm:ss</string>
+    <string name="notified">Notified</string>
+    <string name="not_notified">Not notified</string>
 </resources>

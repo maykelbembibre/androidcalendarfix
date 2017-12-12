@@ -1,7 +1,10 @@
 package bembibre.alarmfix;
 
 import android.app.ListActivity;
+import android.content.BroadcastReceiver;
+import android.content.Context;
 import android.content.Intent;
+import android.content.IntentFilter;
 import android.database.Cursor;
 import android.os.Bundle;
 import android.view.ContextMenu;
@@ -59,9 +62,9 @@ public class ReminderListActivity extends ListActivity {
         this.remindersCursor = mDbHelper.fetchAllReminders();
         startManagingCursor(remindersCursor);
         // Create an array to specify the fields we want (only the TITLE)
-        String[] from = new String[]{RemindersDbAdapter.KEY_TITLE, RemindersDbAdapter.KEY_DATE_TIME};
+        String[] from = new String[]{RemindersDbAdapter.KEY_TITLE, RemindersDbAdapter.KEY_DATE_TIME, RemindersDbAdapter.KEY_NOTIFIED};
         // and an array of the fields we want to bind in the view
-        int[] to = new int[]{R.id.text1, R.id.text2};
+        int[] to = new int[]{R.id.text1, R.id.text2, R.id.text3};
         // Now create a simple cursor adapter and set it to display
         SimpleCursorAdapter reminders =
                 new ReminderListCursorAdapter(this, R.layout.reminder_row,
@@ -132,6 +135,33 @@ public class ReminderListActivity extends ListActivity {
                 return true;
         }
         return super.onContextItemSelected(item);
+    }
+
+    /*
+     * This broadcast receiver listens to changes done from outside this activity, and makes all of
+     * the reminders to be reloaded from scratch.
+     *
+     * This happens when a notification comes and its associated reminder is marked as notified in
+     * the database. Then, the list of reminders of this activity gets updated for reflecting that
+     * change.
+     */
+    private BroadcastReceiver broadcastBufferReceiver = new BroadcastReceiver() {
+        @Override
+        public void onReceive(Context context, Intent bufferIntent) {
+            ReminderListActivity.this.fillData();
+        }
+    };
+
+    @Override
+    public void onResume() {
+        super.onResume();
+        registerReceiver(broadcastBufferReceiver, new IntentFilter(SynchronizedWork.BROADCAST_BUFFER_SEND_CODE));
+    }
+
+    @Override
+    public void onPause() {
+        super.onPause();
+        this.unregisterReceiver(broadcastBufferReceiver);
     }
 
     @Override

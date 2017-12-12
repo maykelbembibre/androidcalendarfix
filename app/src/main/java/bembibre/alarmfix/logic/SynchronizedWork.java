@@ -207,7 +207,7 @@ public class SynchronizedWork {
     }
 
 
-
+    public static final String BROADCAST_BUFFER_SEND_CODE = "com.example.SEND_CODE";
     private static void notifyReminder(Context context, long rowId, long receivedAlarmId) throws Exception {
         // Status bar notification Code Goes here.
         String reminderTitle;
@@ -216,30 +216,40 @@ public class SynchronizedWork {
         dbHelper.open();
         try {
             Cursor cursor = dbHelper.fetchReminder(rowId);
-            if ((cursor != null) && (cursor.moveToFirst())) {
-                Logger.log("A reminder with identifier " + rowId + " is going to be notified to the user.");
-                reminderTitle = cursor.getString(cursor.getColumnIndexOrThrow(RemindersDbAdapter.KEY_TITLE));
-                alarmId = cursor.getLong(cursor.getColumnIndexOrThrow(RemindersDbAdapter.KEY_ALARM_ID));
+            if (cursor != null) {
+                if (cursor.moveToFirst()) {
+                    Logger.log("A reminder with identifier " + rowId + " is going to be notified to the user.");
+                    reminderTitle = cursor.getString(cursor.getColumnIndexOrThrow(RemindersDbAdapter.KEY_TITLE));
+                    alarmId = cursor.getLong(cursor.getColumnIndexOrThrow(RemindersDbAdapter.KEY_ALARM_ID));
 
-                /*
-                 * If the alarm identified of the database doesn't match with the received one,
-                 * then this would be an old alarm and shouldn't do anything.
-                 */
-                if (alarmId == receivedAlarmId) {
-                    // Send notification to the user.
-                    new bembibre.alarmfix.userinterface.NotificationManager(context).notifySingleReminder(rowId, reminderTitle);
+                    /*
+                     * If the alarm identified of the database doesn't match with the received one,
+                     * then this would be an old alarm and shouldn't do anything.
+                     */
+                    if (alarmId == receivedAlarmId) {
+                        // Send notification to the user.
+                        new bembibre.alarmfix.userinterface.NotificationManager(context).notifySingleReminder(rowId, reminderTitle);
 
-                    // Mark the reminder as notified.
-                    dbHelper.updateReminder(rowId, true);
+                        // Mark the reminder as notified.
+                        dbHelper.updateReminder(rowId, true);
+                    } else {
+                        Logger.log("An alarm has been received with the alarm identifier " + receivedAlarmId + " but the alarm identifier that this reminder has got currently is " + alarmId + ", so no notification will be made.");
+                    }
                 } else {
-                    Logger.log("An alarm has been received with the alarm identifier " + receivedAlarmId + " but the alarm identifier that this reminder has got currently is " + alarmId + ", so no notification will be made.");
+                    throw new Exception("There's no way for accessing database for getting information about a reminder which has to be notified to the user.");
                 }
-            } else {
-                throw new Exception("There's no way for accessing database for getting information about a reminder which has to be notified to the user.");
+                cursor.close();
             }
         } finally {
             dbHelper.close();
         }
+
+        /*
+         * Notice the reminders list activity (just in case it is open right now) to update the
+         * reminders list.
+         */
+        Intent bufferIntentSendCode = new Intent(BROADCAST_BUFFER_SEND_CODE);
+        context.sendBroadcast(bufferIntentSendCode);
     }
 
     /**
