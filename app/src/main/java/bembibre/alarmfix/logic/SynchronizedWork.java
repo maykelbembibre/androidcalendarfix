@@ -134,7 +134,7 @@ public class SynchronizedWork {
             mDbHelper.deleteReminder(reminderDatabaseId);
             new ReminderManager(listActivity).unsetReminder(reminderDatabaseId, reminderId, dateAsString);
         }
-        listActivity.fillData();
+        listActivity.createSpinnersAndFillData();
     }
 
     /**

@@ -1,5 +1,9 @@
 <?xml version="1.0" encoding="utf-8"?>
-<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+<RelativeLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    android:layout_width="wrap_content"
+    android:layout_height="wrap_content"
+    android:layout_centerHorizontal="true">
+<LinearLayout
     android:layout_width="match_parent"
     android:layout_height="wrap_content"
     android:orientation="vertical">
@@ -8,8 +12,21 @@
         android:layout_height="wrap_content"
         android:background="@color/actionBarBackground"
         >
+        <Spinner
+            android:id="@+id/year_spinner"
+            android:layout_width="0dp"
+            android:layout_height="match_parent"
+            android:layout_weight="1"
+            />
+        <Spinner
+            android:id="@+id/month_spinner"
+            android:layout_width="0dp"
+            android:layout_height="match_parent"
+            android:layout_weight="1"
+            />
         <TextView android:id="@+id/options"
-            android:layout_width="match_parent"
+            android:layout_width="0dp"
+            android:layout_weight="1"
             android:textAlignment="viewEnd"
             android:layout_gravity="end"
             android:layout_height="wrap_content"
@@ -25,4 +42,17 @@
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
         android:text="@string/no_reminders"/>
+
 </LinearLayout>
+    <TextView android:id="@+id/status_bar"
+        android:layout_width="match_parent"
+        android:textAlignment="viewEnd"
+        android:layout_gravity="end"
+        android:layout_height="wrap_content"
+        android:padding="10dp"
+        android:textSize="20sp"
+        android:textColor="@color/actionBarForeground"
+        android:text="@string/options_menu_text"
+        android:background="@color/actionBarBackground"
+        android:layout_alignParentBottom="true"/>
+    </RelativeLayout>

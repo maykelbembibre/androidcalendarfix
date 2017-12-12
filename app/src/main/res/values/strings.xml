@@ -20,4 +20,5 @@
     <string name="date_time_readable_format">yyyy-MM-dd kk:mm:ss</string>
     <string name="notified">Notified</string>
     <string name="not_notified">Not notified</string>
+    <string name="total_reminders">Total reminders</string>
 </resources>

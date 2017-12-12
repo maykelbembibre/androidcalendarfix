@@ -7,6 +7,9 @@ import android.database.SQLException;
 import android.database.sqlite.SQLiteDatabase;
 import android.database.sqlite.SQLiteOpenHelper;
 
+import java.util.Calendar;
+import java.util.Date;
+
 import bembibre.alarmfix.logging.Logger;
 import bembibre.alarmfix.models.DateTime;
 
@@ -49,6 +52,9 @@ public class RemindersDbAdapter {
      */
     public static final String KEY_ALARM_ID = "alarm_id";
 
+    public static final String KEY_YEAR = "year";
+    public static final String KEY_MONTH = "month";
+
     /**
      * Date and time of the reminder stored as milliseconds since the Epoch.
      */
@@ -72,6 +78,8 @@ public class RemindersDbAdapter {
                     + KEY_BODY + " text not null, "
                     + KEY_NOTIFIED + " integer, "
                     + KEY_ALARM_ID + " integer not null, "
+                    + KEY_YEAR + " integer not null, "
+                    + KEY_MONTH + " integer not null, "
                     + KEY_DATE_TIME + " integer not null);";
     private final Context mCtx;
 
@@ -157,6 +165,12 @@ public class RemindersDbAdapter {
         initialValues.put(KEY_NOTIFIED, false);
         initialValues.put(KEY_ALARM_ID, RemindersDbAdapter.FIRST_ALARM_ID);
         initialValues.put(KEY_DATE_TIME, reminderDateTime);
+
+        // Redundant information, for efficient filter by year and month.
+        int[] yearAndMonth = this.getYearAndMonth(reminderDateTime);
+        initialValues.put(KEY_YEAR, yearAndMonth[0]);
+        initialValues.put(KEY_MONTH, yearAndMonth[1]);
+
         return mDb.insert(DATABASE_TABLE, null, initialValues);
     }
     public boolean deleteReminder(long rowId) {
@@ -164,9 +178,23 @@ public class RemindersDbAdapter {
                 mDb.delete(DATABASE_TABLE, KEY_ROWID + "=" + rowId, null) > 0;
     }
 
-    public Cursor fetchAllReminders() {
+    public Cursor fetchAllReminders(int filterYear, int filterMonth) {
+        String filter = KEY_YEAR + " = " + filterYear + " AND " + KEY_MONTH + " = " + filterMonth;
         return mDb.query(DATABASE_TABLE, new String[] {KEY_ROWID, KEY_TITLE,
-                KEY_BODY, KEY_NOTIFIED, KEY_ALARM_ID, KEY_DATE_TIME}, null, null, null, null, KEY_DATE_TIME);
+                KEY_BODY, KEY_NOTIFIED, KEY_ALARM_ID, KEY_DATE_TIME, KEY_YEAR, KEY_MONTH}, filter, null, null, null, KEY_DATE_TIME);
+    }
+
+    public int countAllReminders() {
+        Cursor mCount= mDb.rawQuery("select count(*) from " + DATABASE_TABLE, null);
+        mCount.moveToFirst();
+        int count = mCount.getInt(0);
+        mCount.close();
+        return count;
+    }
+
+    public Cursor fetchAllRemindersByYear() {
+        // Select year, group by year (avoid repetition), order by year (ascending).
+        return mDb.query(DATABASE_TABLE, new String[] {KEY_YEAR}, null, null, KEY_YEAR, null, KEY_YEAR);
     }
 
     /**
@@ -198,6 +226,12 @@ public class RemindersDbAdapter {
         args.put(KEY_NOTIFIED, 0);
         args.put(KEY_ALARM_ID, alarmId);
         args.put(KEY_DATE_TIME, reminderDateTime);
+
+        // Redundant information, for efficient filter by year and month.
+        int[] yearAndMonth = this.getYearAndMonth(reminderDateTime);
+        args.put(KEY_YEAR, yearAndMonth[0]);
+        args.put(KEY_MONTH, yearAndMonth[1]);
+
         return
                 mDb.update(DATABASE_TABLE, args, KEY_ROWID + "=" + rowId, null) > 0;
     }
@@ -213,5 +247,11 @@ public class RemindersDbAdapter {
         args.put(KEY_NOTIFIED, notifiedAsInt);
         return
                 mDb.update(DATABASE_TABLE, args, KEY_ROWID + "=" + rowId, null) > 0;
+    }
+
+    private int[] getYearAndMonth(long millis) {
+        Calendar calendar = Calendar.getInstance();
+        calendar.setTime(new Date(millis));
+        return new int[]{calendar.get(Calendar.YEAR), calendar.get(Calendar.MONTH)};
     }
 }
