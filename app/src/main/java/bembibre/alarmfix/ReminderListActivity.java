@@ -3,10 +3,11 @@ package bembibre.alarmfix;
 import android.app.ListActivity;
 import android.content.BroadcastReceiver;
 import android.content.Context;
+import android.content.DialogInterface;
 import android.content.Intent;
 import android.content.IntentFilter;
 import android.database.Cursor;
-import android.graphics.PorterDuff;
+import android.net.Uri;
 import android.os.Bundle;
 import android.view.ContextMenu;
 import android.view.Menu;
@@ -14,7 +15,6 @@ import android.view.MenuInflater;
 import android.view.MenuItem;
 import android.view.View;
 import android.widget.AdapterView;
-import android.widget.ArrayAdapter;
 import android.widget.ListView;
 import android.widget.SimpleCursorAdapter;
 import android.widget.Spinner;
@@ -22,15 +22,14 @@ import android.widget.TextView;
 
 import java.util.ArrayList;
 import java.util.Calendar;
-import java.util.Date;
 import java.util.List;
 
-import bembibre.alarmfix.alarms.AlarmException;
 import bembibre.alarmfix.logging.Logger;
+import bembibre.alarmfix.logic.exportimport.DataExport;
+import bembibre.alarmfix.logic.exportimport.DataImport;
 import bembibre.alarmfix.logic.SynchronizedWork;
 import bembibre.alarmfix.database.RemindersDbAdapter;
-import bembibre.alarmfix.models.DateTime;
-import bembibre.alarmfix.userinterface.NotificationManager;
+import bembibre.alarmfix.userinterface.ListActivitySpinnerListener;
 import bembibre.alarmfix.userinterface.ReminderListCursorAdapter;
 import bembibre.alarmfix.userinterface.UserInterfaceUtils;
 
@@ -40,6 +39,7 @@ import bembibre.alarmfix.userinterface.UserInterfaceUtils;
 public class ReminderListActivity extends ListActivity {
 
     private static final int ACTIVITY_CREATE = 0;
+    private static final int PICKFILE_REQUEST_CODE = 1;
 
     private RemindersDbAdapter mDbHelper;
     private Cursor remindersCursor;
@@ -48,7 +48,6 @@ public class ReminderListActivity extends ListActivity {
     Spinner monthSpinner;
     private List<String> yearSpinnerArray;
     private List<String> monthSpinnerArray;
-    private int spinnersEnabled;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -70,18 +69,6 @@ public class ReminderListActivity extends ListActivity {
         });
 
         registerForContextMenu(getListView());
-    }
-
-    private void setSpinnerLookAndFeel(Spinner spinner, List<String> items) {
-        // Sets the layout of items and dropdown items.
-        ArrayAdapter<String> adapter = new ArrayAdapter<>(
-                this, R.layout.spinner_item, items);
-        adapter.setDropDownViewResource(android.R.layout.simple_spinner_dropdown_item);
-
-        // Sets the color of the small triangle.
-        spinner.getBackground().setColorFilter(getResources().getColor(R.color.actionBarForeground), PorterDuff.Mode.SRC_ATOP);
-
-        spinner.setAdapter(adapter);
     }
 
     private void createYearSpinner() {
@@ -115,23 +102,8 @@ public class ReminderListActivity extends ListActivity {
         }
 
         this.yearSpinner = (Spinner) findViewById(R.id.year_spinner);
-        this.yearSpinner.setOnItemSelectedListener(new AdapterView.OnItemSelectedListener() {
-            @Override
-            public void onItemSelected(AdapterView<?> parentView, View selectedItemView, int position, long id) {
-                if (spinnersEnabled == 2) {
-                    ReminderListActivity.this.fillData();
-                } else {
-                    spinnersEnabled++;
-                    Logger.log("Select buttons enabled: " + spinnersEnabled);
-                }
-            }
-
-            @Override
-            public void onNothingSelected(AdapterView<?> parentView) {
-                // your code here
-            }
-        });
-        this.setSpinnerLookAndFeel(this.yearSpinner, yearSpinnerArray);
+        this.yearSpinner.setOnItemSelectedListener(new ListActivitySpinnerListener(this, "year"));
+        UserInterfaceUtils.setSpinnerLookAndFeel(this, this.yearSpinner, yearSpinnerArray);
         if (selectedPosition != null) {
             this.yearSpinner.setSelection(selectedPosition);
         }
@@ -146,23 +118,8 @@ public class ReminderListActivity extends ListActivity {
         }
 
         this.monthSpinner = (Spinner) findViewById(R.id.month_spinner);
-        this.monthSpinner.setOnItemSelectedListener(new AdapterView.OnItemSelectedListener() {
-            @Override
-            public void onItemSelected(AdapterView<?> parentView, View selectedItemView, int position, long id) {
-                if (spinnersEnabled == 2) {
-                    ReminderListActivity.this.fillData();
-                } else {
-                    spinnersEnabled++;
-                    Logger.log("Select buttons enabled: " + spinnersEnabled);
-                }
-            }
-
-            @Override
-            public void onNothingSelected(AdapterView<?> parentView) {
-                // your code here
-            }
-        });
-        this.setSpinnerLookAndFeel(this.monthSpinner, this.monthSpinnerArray);
+        this.monthSpinner.setOnItemSelectedListener(new ListActivitySpinnerListener(this, "month"));
+        UserInterfaceUtils.setSpinnerLookAndFeel(this, this.monthSpinner, this.monthSpinnerArray);
         this.monthSpinner.setSelection(currentMonth);
     }
 
@@ -195,8 +152,6 @@ public class ReminderListActivity extends ListActivity {
     }
 
     public synchronized void createSpinnersAndFillData() {
-        this.spinnersEnabled = 0;
-
         // Spinners don't work for calling fillData()
         this.createYearSpinner();
         this.createMonthSpinner();
@@ -238,8 +193,28 @@ public class ReminderListActivity extends ListActivity {
             case R.id.menu_insert:
                 createReminder();
                 return true;
+            case R.id.menu_export:
+                new DataExport(this).execute();
+                return true;
+            case R.id.menu_import:
+                UserInterfaceUtils.showConfirmationDialog(this, R.string.import_confirmation, new DialogInterface.OnClickListener() {
+                    @Override
+                    public void onClick(DialogInterface dialog, int which) {
+                        ReminderListActivity.this.importFile();
+                    }
+                });
+                return true;
         }
         return super.onMenuItemSelected(featureId, item);
+    }
+
+    /**
+     * Imports reminder data from a file.
+     */
+    private void importFile() {
+        Intent intent = new Intent(Intent.ACTION_GET_CONTENT);
+        intent.setType("*/*");
+        startActivityForResult(intent, PICKFILE_REQUEST_CODE);
     }
 
     private void createReminder() {
@@ -255,14 +230,21 @@ public class ReminderListActivity extends ListActivity {
      * @param intent
      */
     @Override
-    protected void onActivityResult(int requestCode, int resultCode, Intent intent)
-    {
-        /*
-         * Reload the year filter, just in case a reminder for a new year has been created and the
-         * user may want to filter the reminders by that year.
-         */
-        this.createSpinnersAndFillData();
-
+    protected void onActivityResult(int requestCode, int resultCode, Intent intent) {
+        switch (requestCode) {
+            case ACTIVITY_CREATE:
+                /*
+                 * Reload the year filter, just in case a reminder for a new year has been created and the
+                 * user may want to filter the reminders by that year.
+                 */
+                this.createSpinnersAndFillData();
+                break;
+            case PICKFILE_REQUEST_CODE:
+                Uri uri = intent.getData();
+                Logger.log("Importing files from URI " + uri.getPath());
+                new DataImport(this).execute(uri);
+                break;
+        }
         super.onActivityResult(requestCode, resultCode, intent);
     }
 

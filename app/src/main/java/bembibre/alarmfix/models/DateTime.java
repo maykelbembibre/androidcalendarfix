@@ -1,6 +1,7 @@
 package bembibre.alarmfix.models;
 
 import java.text.SimpleDateFormat;
+import java.util.Calendar;
 import java.util.Date;
 
 import bembibre.alarmfix.utils.GeneralUtils;
@@ -16,6 +17,10 @@ public class DateTime {
 
     public DateTime(long millisecondsSinceTheEpoch) {
         this.millisecondsSinceTheEpoch = millisecondsSinceTheEpoch;
+    }
+
+    public DateTime(Calendar when) {
+        this.millisecondsSinceTheEpoch = when.getTime().getTime();
     }
 
     public String toString() {

@@ -1,7 +1,6 @@
 <resources>
     <string name="app_name">Alarm Fix</string>
     <string name="options_menu_text">Options</string>
-    <string name="alert_dialog_title">Warning</string>
     <string name="reminder_does_not_exist">You have been notified of a reminder that you erased, so the application will exit because there is nothing to do.</string>
     <string name="unable_to_set_alarm">The system doesn\'t let us to set a new reminder right now. Perhaps you should delete old reminders for having free space. I don\'t know.</string>
     <string name="no_reminders">The reminders list is empty.</string>
@@ -10,7 +9,30 @@
     <string name="date">Date</string>
     <string name="time">Time</string>
     <string name="confirm">Confirm</string>
+
+    <!-- Types of dialogs to the user -->
+    <string name="info_dialog_title">Information</string>
+    <string name="alert_dialog_title">Warning</string>
+
+    <!-- Options menu -->
     <string name="menu_insert">Add reminder</string>
+    <string name="export_reminders">Export reminders</string>
+    <string name="import_reminders">Import reminders</string>
+
+    <!-- Data export -->
+    <string name="exporting_message">Data is being exported.</string>
+    <string name="export_success">Data has been exported successfully.</string>
+    <string name="export_failure">There has been a problem with the database. Please try it later.</string>
+
+    <!-- Data import -->
+    <string name="importing_message">Data is being imported.</string>
+    <string name="import_confirmation">Are you sure you want to import data? All current reminders will be erased.</string>
+    <string name="import_success">Data has been imported successfully. Correct: %1$d. Errors: %2$d.</string>
+    <string name="import_format_error">You have selected an invalid file.</string>
+    <string name="import_path_error">You have selected a file with a strange path. Please try to select the file in a different way.</string>
+    <string name="import_storage_error">It is totally impossible to access the selected file. Did you give the application the necessary storage permission?</string>
+    <string name="import_failure">There has been a problem while importing the data. Please try it later and make sure that you select a valid file produced by this same application.</string>
+
     <string name="menu_delete">Delete this element</string>
     <string name="task_saved_message">Task saved successfully</string>
     <string name="notifiy_new_task_title">Reminder</string>
@@ -21,4 +43,8 @@
     <string name="notified">Notified</string>
     <string name="not_notified">Not notified</string>
     <string name="total_reminders">Total reminders</string>
+    <string name="progress">Progress</string>
+
+    <string name="yes">Yes</string>
+    <string name="no">No</string>
 </resources>

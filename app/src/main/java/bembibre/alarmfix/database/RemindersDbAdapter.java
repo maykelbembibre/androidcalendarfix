@@ -69,6 +69,11 @@ public class RemindersDbAdapter {
 
     public static final long FIRST_ALARM_ID = 1;
 
+    /**
+     * For pagination.
+     */
+    public static final int PAGE_SIZE = 10;
+
     private DatabaseHelper mDbHelper;
     private SQLiteDatabase mDb;
     private static final String DATABASE_CREATE =
@@ -178,10 +183,34 @@ public class RemindersDbAdapter {
                 mDb.delete(DATABASE_TABLE, KEY_ROWID + "=" + rowId, null) > 0;
     }
 
+    /**
+     * Deletes ALL the database rows. Use it carefully ;)
+     *
+     * @return true if there was at least 1 row erased.
+     */
+    public boolean deleteAllReminders() {
+        return
+                mDb.delete(DATABASE_TABLE, null, null) > 0;
+    }
+
     public Cursor fetchAllReminders(int filterYear, int filterMonth) {
         String filter = KEY_YEAR + " = " + filterYear + " AND " + KEY_MONTH + " = " + filterMonth;
         return mDb.query(DATABASE_TABLE, new String[] {KEY_ROWID, KEY_TITLE,
                 KEY_BODY, KEY_NOTIFIED, KEY_ALARM_ID, KEY_DATE_TIME, KEY_YEAR, KEY_MONTH}, filter, null, null, null, KEY_DATE_TIME);
+    }
+
+    /**
+     * Fetches reminders doing pagination.
+     *
+     * @param page the page, starting from 0.
+     * @return the cursor.
+     */
+    public Cursor fetchAllReminders(int page) {
+        return mDb.rawQuery(
+            "select * from " + DATABASE_TABLE + " order by " + KEY_DATE_TIME +
+            " limit " + RemindersDbAdapter.PAGE_SIZE +
+            " offset " + (page * RemindersDbAdapter.PAGE_SIZE), null
+        );
     }
 
     public int countAllReminders() {

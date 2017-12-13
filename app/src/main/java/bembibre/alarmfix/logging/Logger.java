@@ -1,18 +1,15 @@
 package bembibre.alarmfix.logging;
 
-import android.os.Environment;
-
-import java.io.BufferedWriter;
 import java.io.File;
-import java.io.FileOutputStream;
 import java.io.IOException;
-import java.io.OutputStreamWriter;
 import java.text.DateFormat;
 import java.text.SimpleDateFormat;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.Date;
 import java.util.List;
+
+import bembibre.alarmfix.storage.Storage;
 
 /**
  * Created by REGALIZNEGRO on 02/12/2017.
@@ -62,49 +59,15 @@ public class Logger {
             // La hemos jodido.
             System.out.println("There isn't access to the internal memory.");
         } else {
-            FileOutputStream outputStream = null;
-            OutputStreamWriter writer = null;
-            BufferedWriter bufferedWriter = null;
-            try {
-                outputStream = new FileOutputStream(log, true);
-                writer = new OutputStreamWriter(outputStream);
-                bufferedWriter = new BufferedWriter(writer);
-                String message = Logger.getLogPrefix() + text;
-                bufferedWriter.write(message);
-                System.out.println(message);
-            } catch (IOException e) {
-                e.printStackTrace();
-            } finally {
-                try {
-                    if (bufferedWriter != null) {
-                        bufferedWriter.close();
-                    }
-                    if (writer != null) {
-                        writer.close();
-                    }
-                    if (outputStream != null) {
-                        outputStream.close();
-                    }
-                } catch (IOException e) {
-                    e.printStackTrace();
-                }
-            }
+            String message = Logger.getLogPrefix() + text;
+            Storage.writeStringToFile(log, message, true);
+            System.out.println(message);
         }
     }
 
     private static File getLogsDirectory() {
-        if (Environment.getExternalStorageState().equals(Environment.MEDIA_MOUNTED)) {
-            if (Logger.logsDirectory == null) {
-                Logger.logsDirectory = new File(Environment.getExternalStorageDirectory(), DIRECTORY_NAME);
-            }
-            if (!Logger.logsDirectory.exists()) {
-                boolean created = Logger.logsDirectory.mkdir();
-                if (!created) {
-                    Logger.logsDirectory = null;
-                }
-            }
-        } else {
-            Logger.logsDirectory = null;
+        if (Logger.logsDirectory == null) {
+            Logger.logsDirectory = Storage.getApplicationDirectory(DIRECTORY_NAME);
         }
         return Logger.logsDirectory;
     }

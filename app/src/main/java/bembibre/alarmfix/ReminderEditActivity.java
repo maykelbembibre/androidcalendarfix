@@ -7,22 +7,19 @@ import android.app.TimePickerDialog;
 import android.content.DialogInterface;
 import android.database.Cursor;
 import android.os.Bundle;
-import android.util.Log;
 import android.view.View;
 import android.widget.Button;
 import android.widget.DatePicker;
 import android.widget.EditText;
 import android.widget.TimePicker;
 
-import java.text.ParseException;
 import java.text.SimpleDateFormat;
 import java.util.Calendar;
 import java.util.Date;
 
+import bembibre.alarmfix.database.RemindersDbAdapter;
 import bembibre.alarmfix.logging.Logger;
 import bembibre.alarmfix.logic.SynchronizedWork;
-import bembibre.alarmfix.database.RemindersDbAdapter;
-import bembibre.alarmfix.models.DateTime;
 import bembibre.alarmfix.userinterface.UserInterfaceUtils;
 import bembibre.alarmfix.utils.GeneralUtils;
 
@@ -55,7 +52,7 @@ public class ReminderEditActivity extends Activity {
     private EditText mTitleText;
     private Button mConfirmButton;
     private EditText mBodyText;
-    private long alarmId;
+    private Long alarmId;
 
     public Long mRowId;
 
@@ -119,7 +116,7 @@ public class ReminderEditActivity extends Activity {
                     }
                 };
                 Logger.log("Attempt to open the edition activity with a reminder that does not exist, its identifier is: " + this.mRowId);
-                UserInterfaceUtils.showDialog(this, R.string.reminder_does_not_exist, listener);
+                UserInterfaceUtils.showWarningDialog(this, this.getResources().getString(R.string.reminder_does_not_exist), listener);
 
             } else {
                 startManagingCursor(reminder);
@@ -153,11 +150,10 @@ public class ReminderEditActivity extends Activity {
     private void saveState() {
         String title = mTitleText.getText().toString();
         String body = mBodyText.getText().toString();
-        DateTime reminderDateTime = new DateTime(mCalendar.getTime().getTime());
         if ((title == null) || (title.isEmpty())) {
             title = this.getResources().getString(R.string.default_reminder_title);
         }
-        SynchronizedWork.reminderCreatedOrUpdated(this, title, body, reminderDateTime, this.alarmId);
+        SynchronizedWork.reminderCreatedOrUpdated(this, title, body, mCalendar, this.alarmId);
     }
 
     private void registerButtonListenersAndSetDefaultText(){
