@@ -10,7 +10,7 @@ package bembibre.alarmfix.alarms;
  */
 public class AlarmException extends Exception {
 
-    public AlarmException() {
-        super("The Android operating system doesn't let us to set alarms any longer.");
+    public AlarmException(Throwable cause) {
+        super("The Android operating system doesn't let us to set alarms any longer.", cause);
     }
 }

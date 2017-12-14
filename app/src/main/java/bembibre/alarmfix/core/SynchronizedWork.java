@@ -18,7 +18,6 @@ import java.util.List;
 import bembibre.alarmfix.R;
 import bembibre.alarmfix.ReminderEditActivity;
 import bembibre.alarmfix.ReminderListActivity;
-import bembibre.alarmfix.alarms.AlarmException;
 import bembibre.alarmfix.alarms.ReminderManager;
 import bembibre.alarmfix.database.RemindersDbAdapter;
 import bembibre.alarmfix.logging.Logger;
@@ -28,7 +27,6 @@ import bembibre.alarmfix.models.DataImportResultType;
 import bembibre.alarmfix.models.ImportedReminder;
 import bembibre.alarmfix.models.DataImportResult;
 import bembibre.alarmfix.models.DateTime;
-import bembibre.alarmfix.userinterface.NotificationManager;
 import bembibre.alarmfix.userinterface.UserInterfaceUtils;
 
 /**
@@ -44,11 +42,19 @@ public class SynchronizedWork {
      */
     public synchronized static void reminderAlarmReceived(Context context, Intent intent) {
         try {
-            long rowId = intent.getExtras().getLong(RemindersDbAdapter.KEY_ROWID);
-            long alarmId = intent.getExtras().getLong(ReminderManager.EXTRA_ALARM_ID);
-            CoreOperations.notifyReminder(context, rowId, alarmId);
+            AlarmChainManager alarmChainManager = new AlarmChainManager(context);
+            if ((intent.hasExtra(RemindersDbAdapter.KEY_ROWID)) && (intent.hasExtra(ReminderManager.EXTRA_ALARM_ID))) {
+                Logger.log("The received alarm is for notifying a reminder and setting the next alarm.");
+                long rowId = intent.getExtras().getLong(RemindersDbAdapter.KEY_ROWID);
+                long alarmId = intent.getExtras().getLong(ReminderManager.EXTRA_ALARM_ID);
+                CoreOperations.notifyReminder(context, rowId, alarmId);
+            } else {
+                Logger.log("The received alarm is only for checking if there is a near future reminder.");
+            }
+            // In any case, we have to set the next alarm.
+            alarmChainManager.setNextAlarm();
         } catch (Throwable t) {
-            Logger.log("CRITICAL ERROR: an alarm has been triggered and couldn't be handled. The application has failed to notify an alarm.", t);
+            Logger.log("CRITICAL ERROR: an alarm has been triggered and couldn't be handled. The application has failed to handle an alarm.", t);
         }
     }
 
@@ -56,56 +62,9 @@ public class SynchronizedWork {
      * Called when the phone has just been turned on, this method manages the situation of
      * notifying any alarm that couldn't be notified when the phone was off and of setting the
      * system alarms for any upcoming reminder.
-     * @param reminderManager
-     * @param dbHelper
      */
-    public synchronized static void phoneHasJustBeenTurnedOn(Context context, ReminderManager reminderManager, RemindersDbAdapter dbHelper) {
-        dbHelper.open();
-        try {
-            Cursor cursor = dbHelper.fetchAllNotNotifiedReminders();
-            if (cursor != null) {
-                long reference = CoreOperations.getNowDateTimeWithinAWhile();
-                List<String> pendingReminders = new ArrayList<>();
-                cursor.moveToFirst();
-                int rowIdColumnIndex = cursor.getColumnIndex(RemindersDbAdapter.KEY_ROWID);
-                int dateTimeColumnIndex = cursor.getColumnIndex(RemindersDbAdapter.KEY_DATE_TIME);
-                int remindersSet = 0;
-                int remindersNotSetAlarmException = 0;
-                while (!cursor.isAfterLast()) {
-                    long rowId = cursor.getLong(rowIdColumnIndex);
-                    DateTime dateTime = new DateTime(cursor.getLong(dateTimeColumnIndex));
-
-                    // Handle not notified reminder.
-                    if (dateTime.toMillisecondsSinceTheEpoch() < reference) {
-                        // Past reminder.
-
-                        pendingReminders.add(cursor.getString(cursor.getColumnIndex(RemindersDbAdapter.KEY_TITLE)));
-
-                        // All the pending reminders are going to be notified.
-                        dbHelper.updateReminder(rowId, true);
-                    } else {
-                        // Future reminder.
-
-                        Calendar cal = Calendar.getInstance();
-                        try {
-                            cal.setTime(new Date(dateTime.toMillisecondsSinceTheEpoch()));
-                            long alarmId = cursor.getLong(cursor.getColumnIndexOrThrow(RemindersDbAdapter.KEY_ALARM_ID));
-                            reminderManager.setReminder(rowId, alarmId, cal);
-                            remindersSet++;
-                        } catch (AlarmException e) {
-                            remindersNotSetAlarmException++;
-                        }
-                    }
-
-                    cursor.moveToNext();
-                }
-                new NotificationManager(context).notifyMultipleReminders(pendingReminders);
-                Logger.log("Telephone has been turned on. Reminders set for the future: " + remindersSet + ". Reminders not set because of an alarm problem: " + remindersNotSetAlarmException + ".");
-                cursor.close();
-            }
-        } finally {
-            dbHelper.close();
-        }
+    public synchronized static void phoneHasJustBeenTurnedOn(Context context) {
+        new AlarmChainManager(context).setNextAlarm();
     }
 
     /**
@@ -115,7 +74,8 @@ public class SynchronizedWork {
      * @param reminderDatabaseId
      */
     public synchronized static void reminderDeleted(ReminderListActivity listActivity, RemindersDbAdapter mDbHelper, long reminderDatabaseId) {
-        CoreOperations.deleteReminderAndItsAlarm(listActivity, mDbHelper, reminderDatabaseId);
+        mDbHelper.deleteReminder(reminderDatabaseId);
+        new AlarmChainManager(listActivity).setNextAlarm();
         listActivity.createSpinnersAndFillData();
     }
 
@@ -131,16 +91,16 @@ public class SynchronizedWork {
      */
     public synchronized static void reminderCreatedOrUpdated(final ReminderEditActivity reminderEditActivity, String title, String body, Calendar reminderDateTime, Long currentAlarmId) {
         Long createdOrUpdatedReminderId =
-                CoreOperations.createReminderAndAlarm(
-            reminderEditActivity,
+                CoreOperations.createReminder(
             reminderEditActivity.mDbHelper,
             title,
             body,
             reminderDateTime,
+            false,
             reminderEditActivity.mRowId,
-            currentAlarmId,
-            false
+            currentAlarmId
         );
+        new AlarmChainManager(reminderEditActivity).setNextAlarm();
         if (reminderEditActivity.mRowId == null) {
             // Save the new id of the newly created event.
             reminderEditActivity.mRowId = createdOrUpdatedReminderId;
@@ -169,10 +129,6 @@ public class SynchronizedWork {
         DataImportResultType resultType;
         DataImportResult result;
         try {
-            long totalReminders = dbAdapter.countAllReminders();
-            String dateAsString;
-            long processedReminders = 0;
-
             // Import new reminders.
             JSONArray reminders = new JSONArray(jsonDataToImport);
             JSONObject reminder;
@@ -194,40 +150,25 @@ public class SynchronizedWork {
             // JSON exception could be thrown before of here if the file format is bad.
 
             // Delete old reminders.
-            Cursor cursor = dbAdapter.fetchAllReminders(0);
-            while ((cursor != null) && (cursor.moveToFirst())) {
-                Logger.log("Data import: deleting " + cursor.getCount() + " reminders.");
-                do {
-                    long row_id = cursor.getLong(cursor.getColumnIndexOrThrow(RemindersDbAdapter.KEY_ROWID));
-                    long dateTime = cursor.getLong(cursor.getColumnIndexOrThrow(RemindersDbAdapter.KEY_DATE_TIME));
-                    dateAsString = new DateTime(dateTime).toString();
-
-                    CoreOperations.deleteReminderAndItsAlarm(context, dbAdapter, row_id, dateAsString);
-
-                    processedReminders++;
-                    whereToPublishProgress.publishProgressFromOutside(((float) processedReminders) / totalReminders / 2);
-                } while (cursor.moveToNext());
-                cursor.close();
-
-                /*
-                 * Page is always the first because reminders are getting deleted one by one
-                 * gingerly.
-                 */
-                cursor = dbAdapter.fetchAllReminders(0);
-            }
-            if (cursor != null) {
-                cursor.close();
-            }
+            dbAdapter.deleteAllReminders();
+            whereToPublishProgress.publishProgressFromOutside(0.5F);
 
             // Effectively create the imported reminders.
             int processed = 0;
             int importedRemindersSize = importedReminders.size();
+            long now = new Date().getTime();
             for (ImportedReminder importedReminder2 : importedReminders) {
                 // Past alarms are deliberately ignored here. If not and there were too many, what a mess!
-                CoreOperations.createReminderAndAlarm(context, dbAdapter, importedReminder2.getTitle(), importedReminder2.getBody(), importedReminder2.getCalendar(), null, null, true);
+                if (importedReminder2.getCalendar().getTimeInMillis() < now) {
+                    importedReminder2.setAsAlreadyNotified();
+                }
+                CoreOperations.createReminder(dbAdapter, importedReminder2.getTitle(), importedReminder2.getBody(), importedReminder2.getCalendar(), importedReminder2.isNotified(), null, null);
                 processed++;
                 whereToPublishProgress.publishProgressFromOutside(((float) processed) / importedRemindersSize / 2 + 0.5f);
             }
+
+            // Set next alarm.
+            new AlarmChainManager(context).setNextAlarm();
 
             resultType = DataImportResultType.OK;
             result = new DataImportResult(resultType, importedReminders.size(), errors);
@@ -258,34 +199,9 @@ public class SynchronizedWork {
         boolean result;
         try {
             // Delete all reminders.
-            long totalReminders = dbAdapter.countAllReminders();
-            String dateAsString;
-            long processedReminders = 0;
-            Cursor cursor = dbAdapter.fetchAllReminders(0);
-            while ((cursor != null) && (cursor.moveToFirst())) {
-                Logger.log("Data delete: deleting " + cursor.getCount() + " reminders.");
-                do {
-                    long row_id = cursor.getLong(cursor.getColumnIndexOrThrow(RemindersDbAdapter.KEY_ROWID));
-                    long dateTime = cursor.getLong(cursor.getColumnIndexOrThrow(RemindersDbAdapter.KEY_DATE_TIME));
-                    dateAsString = new DateTime(dateTime).toString();
-
-                    CoreOperations.deleteReminderAndItsAlarm(context, dbAdapter, row_id, dateAsString);
-
-                    processedReminders++;
-                    whereToPublishProgress.publishProgressFromOutside(((float) processedReminders) / totalReminders);
-                } while (cursor.moveToNext());
-                cursor.close();
-
-                /*
-                 * Page is always the first because reminders are getting deleted one by one
-                 * gingerly.
-                 */
-                cursor = dbAdapter.fetchAllReminders(0);
-            }
-            if (cursor != null) {
-                cursor.close();
-            }
-
+            new ReminderManager(context).unsetAlarm();
+            whereToPublishProgress.publishProgressFromOutside(0.5F);
+            dbAdapter.deleteAllReminders();
             result = true;
         } catch (Throwable t) {
             Logger.log("Unexpected error while deleting all reminders in a data deletion process.", t);

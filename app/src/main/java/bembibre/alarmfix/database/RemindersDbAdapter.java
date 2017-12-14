@@ -167,11 +167,11 @@ public class RemindersDbAdapter {
     }
 
     public long createReminder(String title, String body, long
-            reminderDateTime) {
+            reminderDateTime, boolean notified) {
         ContentValues initialValues = new ContentValues();
         initialValues.put(KEY_TITLE, title);
         initialValues.put(KEY_BODY, body);
-        initialValues.put(KEY_NOTIFIED, false);
+        initialValues.put(KEY_NOTIFIED, notified);
         initialValues.put(KEY_ALARM_ID, RemindersDbAdapter.FIRST_ALARM_ID);
         initialValues.put(KEY_DATE_TIME, reminderDateTime);
 
@@ -182,6 +182,7 @@ public class RemindersDbAdapter {
 
         return mDb.insert(DATABASE_TABLE, null, initialValues);
     }
+
     public boolean deleteReminder(long rowId) {
         return
                 mDb.delete(DATABASE_TABLE, KEY_ROWID + "=" + rowId, null) > 0;
@@ -236,7 +237,7 @@ public class RemindersDbAdapter {
      */
     public Cursor fetchAllNotNotifiedReminders() {
         return mDb.query(DATABASE_TABLE, new String[] {KEY_ROWID, KEY_TITLE,
-                KEY_BODY, KEY_NOTIFIED, KEY_ALARM_ID, KEY_DATE_TIME}, KEY_NOTIFIED + "= 0", null, null, null, null);
+                KEY_BODY, KEY_NOTIFIED, KEY_ALARM_ID, KEY_DATE_TIME}, KEY_NOTIFIED + "= 0", null, null, null, KEY_DATE_TIME);
     }
 
     public Cursor fetchReminder(long rowId) throws SQLException {

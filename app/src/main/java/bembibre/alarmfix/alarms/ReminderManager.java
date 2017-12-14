@@ -13,10 +13,6 @@ import bembibre.alarmfix.logging.Logger;
 import bembibre.alarmfix.utils.GeneralUtils;
 
 /**
- * Created by Max Power on 12/08/2017.
- */
-
-/**
  * Sets alarms in the operating system for the reminders of this application.
  */
 public class ReminderManager {
@@ -47,31 +43,36 @@ public class ReminderManager {
         Intent i = new Intent(mContext, OnAlarmReceiver.class);
         i.putExtra(RemindersDbAdapter.KEY_ROWID, taskId);
         i.putExtra(ReminderManager.EXTRA_ALARM_ID, alarmId);
-        PendingIntent pi = getReminderPendingIntent(i, taskId);
+        PendingIntent pi = getReminderPendingIntent(i);
 
         try {
             this.setAlarm(pi, when);
             Logger.log("An alarm has been set successfully for the reminder at " + GeneralUtils.format(when) + ". Reminder id: " + taskId);
         } catch (Throwable throwable) {
-            Logger.log("The system doesn't let us to set an alarm for the reminder at " + GeneralUtils.format(when), throwable);
-            throw new AlarmException();
+            Logger.log("The system doesn't let us to set an alarm for the reminder at " + GeneralUtils.format(when));
+            throw new AlarmException(throwable);
+        }
+    }
+
+    public void setNextAlarmCheckReminder(Calendar when) throws AlarmException {
+        Intent i = new Intent(mContext, OnAlarmReceiver.class);
+        PendingIntent pi = getReminderPendingIntent(i);
+        try {
+            this.setAlarm(pi, when);
+            Logger.log("An alarm has been set successfully for the next reminder check at " + GeneralUtils.format(when) + ".");
+        } catch (Throwable throwable) {
+            Logger.log("The system doesn't let us to set an alarm for the next reminder check at " + GeneralUtils.format(when));
+            throw new AlarmException(throwable);
         }
     }
 
     /**
-     * Unsets the alarm that would trigger for the reminder with the given database identifier.
-     * When calling this method, the reminder could have been erased from the database and it
-     * wouldn't be a problem. This method is only for unsetting its associated alarm from the
-     * system.
-     *
-     * @param taskId  database identifier of the reminder.
-     * @param date    date for logging purposes.
+     * Unsets the alarm, if it is set.
      */
-    public void unsetReminder(long taskId, String date) {
+    public void unsetAlarm() {
         Intent i = new Intent(mContext, OnAlarmReceiver.class);
-        PendingIntent pi = getReminderPendingIntent(i, taskId);
+        PendingIntent pi = getReminderPendingIntent(i);
         mAlarmManager.cancel(pi);
-        Logger.log("An alarm has been unset successfully for the reminder at " + date + ". Reminder id: " + taskId);
     }
 
     /**
@@ -79,11 +80,10 @@ public class ReminderManager {
      * when a reminder's alarm triggers.
      *
      * @param i the intent to be used.
-     * @param taskId reminder database identifier, it distingishes each alarm from the others.
      * @return the <code>PendingIntent</code> object.
      */
-    private PendingIntent getReminderPendingIntent(Intent i, long taskId) {
-        PendingIntent pi = PendingIntent.getBroadcast(mContext, (int)taskId, i, PendingIntent.FLAG_UPDATE_CURRENT);
+    private PendingIntent getReminderPendingIntent(Intent i) {
+        PendingIntent pi = PendingIntent.getBroadcast(mContext, 0, i, PendingIntent.FLAG_UPDATE_CURRENT);
         return pi;
     }
 

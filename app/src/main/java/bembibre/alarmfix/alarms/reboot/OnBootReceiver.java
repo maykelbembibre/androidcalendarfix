@@ -18,8 +18,6 @@ import bembibre.alarmfix.database.RemindersDbAdapter;
 public class OnBootReceiver extends BroadcastReceiver {
     @Override
     public void onReceive(Context context, Intent intent) {
-        ReminderManager reminderMgr = new ReminderManager(context);
-        RemindersDbAdapter dbHelper = RemindersDbAdapter.getInstance(context);
-        SynchronizedWork.phoneHasJustBeenTurnedOn(context, reminderMgr, dbHelper);
+        SynchronizedWork.phoneHasJustBeenTurnedOn(context);
     }
 }

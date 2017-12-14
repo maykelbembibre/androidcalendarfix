@@ -67,7 +67,6 @@ public class CoreOperations {
     /**
      * Does the operation of creating or updating a reminder.
      *
-     * @param context application context.
      * @param dbAdapter object for accessing the database, the caller must open an close it properly.
      * @param title title for the reminder.
      * @param body body for the reminder.
@@ -79,31 +78,17 @@ public class CoreOperations {
      * nothing even if it was fired.
      * @return identifier of the created or updated reminder or <code>null</code> if there was a problem.
      */
-    public static Long createReminderAndAlarm(Context context, RemindersDbAdapter dbAdapter, String title, String body, Calendar reminderCalendar, Long updatedReminderId, Long currentAlarmId, boolean ignorePast) {
+    static Long createReminder(RemindersDbAdapter dbAdapter, String title, String body, Calendar reminderCalendar, boolean notified, Long updatedReminderId, Long currentAlarmId) {
         Long id;
-        long alarmId;
         DateTime reminderDateTime = new DateTime(reminderCalendar);
-        long now = new Date().getTime();
         try {
             dbAdapter.beginTransaction();
 
             if (updatedReminderId == null) {
-                id = dbAdapter.createReminder(title, body, reminderDateTime.toMillisecondsSinceTheEpoch());
-                alarmId = RemindersDbAdapter.FIRST_ALARM_ID;
+                id = dbAdapter.createReminder(title, body, reminderDateTime.toMillisecondsSinceTheEpoch(), notified);
             } else {
                 id = updatedReminderId;
-                alarmId = currentAlarmId + 1;
-                dbAdapter.updateReminder(id, title, body, reminderDateTime.toMillisecondsSinceTheEpoch(), alarmId);
-            }
-
-            /*
-             * Can throw exception.
-             * If a reminder update has happened, the alarm for the old time is cancelled automatically.
-             */
-            if ((ignorePast) && (reminderDateTime.toMillisecondsSinceTheEpoch() <= now)) {
-                Logger.log("An alarm has been ignored because it is past, for the reminder at " + GeneralUtils.format(reminderCalendar) + ". Reminder id: " + id);
-            } else {
-                new ReminderManager(context).setReminder(id, alarmId, reminderCalendar);
+                dbAdapter.updateReminder(id, title, body, reminderDateTime.toMillisecondsSinceTheEpoch(), currentAlarmId + 1);
             }
 
             // No exceptions, all okay.
@@ -127,30 +112,8 @@ public class CoreOperations {
      */
     public static long getNowDateTimeWithinAWhile() {
         Calendar nowCalendar = Calendar.getInstance();
-        nowCalendar.add(Calendar.MINUTE, 10);
+        nowCalendar.add(Calendar.SECOND, 30);
         return nowCalendar.getTime().getTime();
     }
 
-    public static void deleteReminderAndItsAlarm(Context context, RemindersDbAdapter mDbHelper, long reminderDatabaseId, String dateAsString) {
-        mDbHelper.deleteReminder(reminderDatabaseId);
-        new ReminderManager(context).unsetReminder(reminderDatabaseId, dateAsString);
-    }
-
-    public static void deleteReminderAndItsAlarm(Context context, RemindersDbAdapter mDbHelper, long reminderDatabaseId) {
-        Cursor cursor = mDbHelper.fetchReminder(reminderDatabaseId);
-        Long date;
-        String dateAsString;
-        if ((cursor != null) && (cursor.moveToFirst())) {
-            date = cursor.getLong(cursor.getColumnIndexOrThrow(RemindersDbAdapter.KEY_DATE_TIME));
-        } else {
-            date = null;
-        }
-        if (date == null) {
-            dateAsString = "unknown";
-        } else {
-            dateAsString = new DateTime(date).toString();
-        }
-        deleteReminderAndItsAlarm(context, mDbHelper, reminderDatabaseId, dateAsString);
-        cursor.close();
-    }
 }
