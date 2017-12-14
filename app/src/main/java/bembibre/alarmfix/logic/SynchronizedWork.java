@@ -1,9 +1,5 @@
 package bembibre.alarmfix.logic;
 
-/**
- * Created by Max Power on 08/12/2017.
- */
-
 import android.content.Context;
 import android.content.DialogInterface;
 import android.content.Intent;
@@ -39,6 +35,8 @@ import bembibre.alarmfix.utils.GeneralUtils;
  * Class for all the delicate work that must be synchronized between threads.
  */
 public class SynchronizedWork {
+
+    public static final String BROADCAST_BUFFER_SEND_CODE = "com.example.SEND_CODE";
 
     /**
      * Synchronized method called when an alarm for a reminder has been triggered.
@@ -256,7 +254,7 @@ public class SynchronizedWork {
         return result;
     }
 
-    public synchronized static boolean deleteAllData(Context context, DeleteAllReminders whereToPublishProgress) {
+    synchronized static boolean deleteAllData(Context context, DeleteAllReminders whereToPublishProgress) {
         RemindersDbAdapter dbAdapter = RemindersDbAdapter.getInstance(context);
         dbAdapter.open();
         DataImportResultType resultType;
@@ -310,7 +308,6 @@ public class SynchronizedWork {
         return result;
     }
 
-    public static final String BROADCAST_BUFFER_SEND_CODE = "com.example.SEND_CODE";
     private static void notifyReminder(Context context, long rowId, long receivedAlarmId) throws Exception {
         // Status bar notification Code Goes here.
         String reminderTitle;

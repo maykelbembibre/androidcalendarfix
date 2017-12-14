@@ -10,7 +10,7 @@
     <item android:id="@+id/menu_import"
         android:icon="@android:drawable/ic_menu_add"
         android:title="@string/import_reminders" />
-    <item android:id="@+id/menu_delete"
+    <item android:id="@+id/menu_delete_all"
         android:icon="@android:drawable/ic_menu_add"
         android:title="@string/delete_reminders" />
 </menu>

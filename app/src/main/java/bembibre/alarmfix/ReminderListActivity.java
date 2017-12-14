@@ -253,7 +253,7 @@ public class ReminderListActivity extends ListActivity {
                         ReminderListActivity.this.importFile();
                     }
                 });
-            case R.id.menu_delete:
+            case R.id.menu_delete_all:
                 UserInterfaceUtils.showConfirmationDialog(this, R.string.deleting_confirmation, new DialogInterface.OnClickListener() {
                     @Override
                     public void onClick(DialogInterface dialog, int which) {
