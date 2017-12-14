@@ -19,7 +19,7 @@ import java.util.Date;
 
 import bembibre.alarmfix.database.RemindersDbAdapter;
 import bembibre.alarmfix.logging.Logger;
-import bembibre.alarmfix.logic.SynchronizedWork;
+import bembibre.alarmfix.core.SynchronizedWork;
 import bembibre.alarmfix.userinterface.UserInterfaceUtils;
 import bembibre.alarmfix.utils.GeneralUtils;
 

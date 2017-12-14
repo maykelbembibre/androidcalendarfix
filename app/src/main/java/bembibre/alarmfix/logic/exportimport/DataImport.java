@@ -10,11 +10,11 @@ import java.io.File;
 
 import bembibre.alarmfix.R;
 import bembibre.alarmfix.logging.Logger;
-import bembibre.alarmfix.logic.models.DataImportResultType;
+import bembibre.alarmfix.models.DataImportResultType;
 import bembibre.alarmfix.storage.Storage;
-import bembibre.alarmfix.logic.SynchronizedWork;
+import bembibre.alarmfix.core.SynchronizedWork;
 import bembibre.alarmfix.storage.UriProcessor;
-import bembibre.alarmfix.logic.models.DataImportResult;
+import bembibre.alarmfix.models.DataImportResult;
 import bembibre.alarmfix.userinterface.UserInterfaceUtils;
 
 /**

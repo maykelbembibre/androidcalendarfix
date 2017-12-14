@@ -25,13 +25,14 @@ import java.util.ArrayList;
 import java.util.Calendar;
 import java.util.List;
 
-import bembibre.alarmfix.database.RemindersDbAdapter;
+import bembibre.alarmfix.core.CoreOperations;
 import bembibre.alarmfix.logging.Logger;
 import bembibre.alarmfix.logic.DataAccessHelper;
 import bembibre.alarmfix.logic.DeleteAllReminders;
-import bembibre.alarmfix.logic.SynchronizedWork;
 import bembibre.alarmfix.logic.exportimport.DataExport;
 import bembibre.alarmfix.logic.exportimport.DataImport;
+import bembibre.alarmfix.core.SynchronizedWork;
+import bembibre.alarmfix.database.RemindersDbAdapter;
 import bembibre.alarmfix.models.YearsMonthsAndReminders;
 import bembibre.alarmfix.userinterface.ListActivitySpinnerListener;
 import bembibre.alarmfix.userinterface.ReminderListCursorAdapter;
@@ -40,7 +41,7 @@ import bembibre.alarmfix.userinterface.UserInterfaceUtils;
 /**
  * The main activity.
  *
- * Branch efficient_alarms.
+ * Branch master.
  */
 public class ReminderListActivity extends ListActivity {
 
@@ -348,7 +349,7 @@ public class ReminderListActivity extends ListActivity {
     @Override
     public void onResume() {
         super.onResume();
-        registerReceiver(broadcastBufferReceiver, new IntentFilter(SynchronizedWork.BROADCAST_BUFFER_SEND_CODE));
+        registerReceiver(broadcastBufferReceiver, new IntentFilter(CoreOperations.BROADCAST_BUFFER_SEND_CODE));
     }
 
     @Override

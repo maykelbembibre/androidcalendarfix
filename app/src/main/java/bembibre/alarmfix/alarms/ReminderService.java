@@ -2,7 +2,7 @@ package bembibre.alarmfix.alarms;
 
 import android.content.Intent;
 
-import bembibre.alarmfix.logic.SynchronizedWork;
+import bembibre.alarmfix.core.SynchronizedWork;
 
 /**
  * Created by Max Power on 12/08/2017.

@@ -1,4 +1,4 @@
-package bembibre.alarmfix.logic.models;
+package bembibre.alarmfix.models;
 
 /**
  * Created by Max Power on 13/12/2017.
