@@ -18,6 +18,7 @@
     <string name="menu_insert">Add reminder</string>
     <string name="export_reminders">Export reminders</string>
     <string name="import_reminders">Import reminders</string>
+    <string name="delete_reminders">Delete all reminders</string>
 
     <!-- Data export -->
     <string name="exporting_message">Data is being exported.</string>
@@ -32,6 +33,12 @@
     <string name="import_path_error">You have selected a file with a strange path. Please try to select the file in a different way.</string>
     <string name="import_storage_error">It is totally impossible to access the selected file. Did you give the application the necessary storage permission?</string>
     <string name="import_failure">There has been a problem while importing the data. Please try it later and make sure that you select a valid file produced by this same application.</string>
+
+    <!-- Data deletion -->
+    <string name="deleting_confirmation">Are you sure you want to delete all reminders? This operation cannot be undone.</string>
+    <string name="deleting_message">Data is being deleted.</string>
+    <string name="delete_success">All reminders have been deleted.</string>
+    <string name="delete_failure">There was a problem while trying to delete all reminders.</string>
 
     <string name="menu_delete">Delete this element</string>
     <string name="task_saved_message">Task saved successfully</string>

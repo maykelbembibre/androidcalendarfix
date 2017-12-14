@@ -27,6 +27,7 @@ import java.util.Map;
 
 import bembibre.alarmfix.logging.Logger;
 import bembibre.alarmfix.logic.DataAccessHelper;
+import bembibre.alarmfix.logic.DeleteAllReminders;
 import bembibre.alarmfix.logic.exportimport.DataExport;
 import bembibre.alarmfix.logic.exportimport.DataImport;
 import bembibre.alarmfix.logic.SynchronizedWork;
@@ -250,6 +251,13 @@ public class ReminderListActivity extends ListActivity {
                     @Override
                     public void onClick(DialogInterface dialog, int which) {
                         ReminderListActivity.this.importFile();
+                    }
+                });
+            case R.id.menu_delete:
+                UserInterfaceUtils.showConfirmationDialog(this, R.string.deleting_confirmation, new DialogInterface.OnClickListener() {
+                    @Override
+                    public void onClick(DialogInterface dialog, int which) {
+                        new DeleteAllReminders(ReminderListActivity.this).execute();
                     }
                 });
                 return true;

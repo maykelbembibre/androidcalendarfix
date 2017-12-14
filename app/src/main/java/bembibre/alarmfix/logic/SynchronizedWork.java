@@ -33,6 +33,7 @@ import bembibre.alarmfix.logic.models.DataImportResult;
 import bembibre.alarmfix.models.DateTime;
 import bembibre.alarmfix.userinterface.NotificationManager;
 import bembibre.alarmfix.userinterface.UserInterfaceUtils;
+import bembibre.alarmfix.utils.GeneralUtils;
 
 /**
  * Class for all the delicate work that must be synchronized between threads.
@@ -141,7 +142,8 @@ public class SynchronizedWork {
             body,
             reminderDateTime,
             reminderEditActivity.mRowId,
-            currentAlarmId
+            currentAlarmId,
+            false
         );
         if (reminderEditActivity.mRowId == null) {
             // Save the new id of the newly created event.
@@ -172,7 +174,6 @@ public class SynchronizedWork {
         DataImportResult result;
         try {
             long totalReminders = dbAdapter.countAllReminders();
-            Cursor cursor = dbAdapter.fetchAllReminders(0);
             String dateAsString;
             long processedReminders = 0;
 
@@ -192,13 +193,12 @@ public class SynchronizedWork {
                 } catch (JSONException e) {
                     errors++;
                 }
-
-                whereToPublishProgress.publishProgressFromOutside(((float) (importedReminders.size() + errors)) / length / 2 + 0.5f);
             }
 
             // JSON exception could be thrown before of here if the file format is bad.
 
             // Delete old reminders.
+            Cursor cursor = dbAdapter.fetchAllReminders(0);
             while ((cursor != null) && (cursor.moveToFirst())) {
                 Logger.log("Data import: deleting " + cursor.getCount() + " reminders.");
                 do {
@@ -210,7 +210,6 @@ public class SynchronizedWork {
                     SynchronizedWork.deleteReminderAndItsAlarm(context, dbAdapter, row_id, alarm_id, dateAsString);
 
                     processedReminders++;
-
                     whereToPublishProgress.publishProgressFromOutside(((float) processedReminders) / totalReminders / 2);
                 } while (cursor.moveToNext());
                 cursor.close();
@@ -226,8 +225,13 @@ public class SynchronizedWork {
             }
 
             // Effectively create the imported reminders.
+            int processed = 0;
+            int importedRemindersSize = importedReminders.size();
             for (ImportedReminder importedReminder2 : importedReminders) {
-                SynchronizedWork.createReminderAndAlarm(context, dbAdapter, importedReminder2.getTitle(), importedReminder2.getBody(), importedReminder2.getCalendar(), null, null);
+                // Past alarms are deliberately ignored here. If not and there were too many, what a mess!
+                SynchronizedWork.createReminderAndAlarm(context, dbAdapter, importedReminder2.getTitle(), importedReminder2.getBody(), importedReminder2.getCalendar(), null, null, true);
+                processed++;
+                whereToPublishProgress.publishProgressFromOutside(((float) processed) / importedRemindersSize / 2 + 0.5f);
             }
 
             resultType = DataImportResultType.OK;
@@ -238,6 +242,60 @@ public class SynchronizedWork {
         } catch (Throwable t) {
             Logger.log("Unexpected error while deleting all reminders in a data import process.", t);
             result = new DataImportResult(DataImportResultType.UNKNOWN_ERROR, 0, 0);
+        } finally {
+            dbAdapter.close();
+        }
+
+        /*
+         * Notice the reminders list activity (just in case it is open right now) to update the
+         * reminders list.
+         */
+        Intent bufferIntentSendCode = new Intent(BROADCAST_BUFFER_SEND_CODE);
+        context.sendBroadcast(bufferIntentSendCode);
+
+        return result;
+    }
+
+    public synchronized static boolean deleteAllData(Context context, DeleteAllReminders whereToPublishProgress) {
+        RemindersDbAdapter dbAdapter = RemindersDbAdapter.getInstance(context);
+        dbAdapter.open();
+        DataImportResultType resultType;
+        boolean result;
+        try {
+            // Delete all reminders.
+            long totalReminders = dbAdapter.countAllReminders();
+            String dateAsString;
+            long processedReminders = 0;
+            Cursor cursor = dbAdapter.fetchAllReminders(0);
+            while ((cursor != null) && (cursor.moveToFirst())) {
+                Logger.log("Data delete: deleting " + cursor.getCount() + " reminders.");
+                do {
+                    long row_id = cursor.getLong(cursor.getColumnIndexOrThrow(RemindersDbAdapter.KEY_ROWID));
+                    long alarm_id = cursor.getLong(cursor.getColumnIndexOrThrow(RemindersDbAdapter.KEY_ALARM_ID));
+                    long dateTime = cursor.getLong(cursor.getColumnIndexOrThrow(RemindersDbAdapter.KEY_DATE_TIME));
+                    dateAsString = new DateTime(dateTime).toString();
+
+                    SynchronizedWork.deleteReminderAndItsAlarm(context, dbAdapter, row_id, alarm_id, dateAsString);
+
+                    processedReminders++;
+                    whereToPublishProgress.publishProgressFromOutside(((float) processedReminders) / totalReminders);
+                } while (cursor.moveToNext());
+                cursor.close();
+
+                /*
+                 * Page is always the first because reminders are getting deleted one by one
+                 * gingerly.
+                 */
+                cursor = dbAdapter.fetchAllReminders(0);
+            }
+            if (cursor != null) {
+                cursor.close();
+            }
+
+            result = true;
+        } catch (Throwable t) {
+            Logger.log("Unexpected error while deleting all reminders in a data deletion process.", t);
+            result = false;
         } finally {
             dbAdapter.close();
         }
@@ -312,10 +370,11 @@ public class SynchronizedWork {
      * nothing even if it was fired.
      * @return identifier of the created or updated reminder or <code>null</code> if there was a problem.
      */
-    private static Long createReminderAndAlarm(Context context, RemindersDbAdapter dbAdapter, String title, String body, Calendar reminderCalendar, Long updatedReminderId, Long currentAlarmId) {
+    private static Long createReminderAndAlarm(Context context, RemindersDbAdapter dbAdapter, String title, String body, Calendar reminderCalendar, Long updatedReminderId, Long currentAlarmId, boolean ignorePast) {
         Long id;
         long alarmId;
         DateTime reminderDateTime = new DateTime(reminderCalendar);
+        long now = new Date().getTime();
         try {
             dbAdapter.beginTransaction();
 
@@ -332,7 +391,11 @@ public class SynchronizedWork {
              * Can throw exception.
              * If a reminder update has happened, the alarm for the old time is cancelled automatically.
              */
-            new ReminderManager(context).setReminder(id, alarmId, reminderCalendar);
+            if ((ignorePast) && (reminderDateTime.toMillisecondsSinceTheEpoch() <= now)) {
+                Logger.log("An alarm has been ignored because it is past, for the reminder at " + GeneralUtils.format(reminderCalendar) + ". Reminder id: " + id);
+            } else {
+                new ReminderManager(context).setReminder(id, alarmId, reminderCalendar);
+            }
 
             // No exceptions, all okay.
             dbAdapter.setTransactionSuccessful();
