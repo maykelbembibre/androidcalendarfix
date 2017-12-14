@@ -40,6 +40,8 @@ import bembibre.alarmfix.userinterface.UserInterfaceUtils;
 
 /**
  * The main activity.
+ *
+ * Branch master.
  */
 public class ReminderListActivity extends ListActivity {
 
