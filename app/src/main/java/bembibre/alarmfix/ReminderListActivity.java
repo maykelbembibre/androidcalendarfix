@@ -8,6 +8,7 @@ import android.content.Intent;
 import android.content.IntentFilter;
 import android.database.Cursor;
 import android.net.Uri;
+import android.os.Build;
 import android.os.Bundle;
 import android.view.ContextMenu;
 import android.view.Menu;
@@ -79,6 +80,10 @@ public class ReminderListActivity extends ListActivity {
         });
 
         registerForContextMenu(getListView());
+
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M) {
+            requestPermissions(new String[]{android.Manifest.permission.WRITE_EXTERNAL_STORAGE}, 1);
+        }
     }
 
     private void createYearSpinner() {
@@ -253,6 +258,7 @@ public class ReminderListActivity extends ListActivity {
                         ReminderListActivity.this.importFile();
                     }
                 });
+                return true;
             case R.id.menu_delete_all:
                 UserInterfaceUtils.showConfirmationDialog(this, R.string.deleting_confirmation, new DialogInterface.OnClickListener() {
                     @Override
