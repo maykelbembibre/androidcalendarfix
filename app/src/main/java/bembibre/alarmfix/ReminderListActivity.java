@@ -23,12 +23,15 @@ import android.widget.TextView;
 import java.util.ArrayList;
 import java.util.Calendar;
 import java.util.List;
+import java.util.Map;
 
 import bembibre.alarmfix.logging.Logger;
+import bembibre.alarmfix.logic.DataAccessHelper;
 import bembibre.alarmfix.logic.exportimport.DataExport;
 import bembibre.alarmfix.logic.exportimport.DataImport;
 import bembibre.alarmfix.logic.SynchronizedWork;
 import bembibre.alarmfix.database.RemindersDbAdapter;
+import bembibre.alarmfix.models.YearsMonthsAndReminders;
 import bembibre.alarmfix.userinterface.ListActivitySpinnerListener;
 import bembibre.alarmfix.userinterface.ReminderListCursorAdapter;
 import bembibre.alarmfix.userinterface.UserInterfaceUtils;
@@ -38,6 +41,7 @@ import bembibre.alarmfix.userinterface.UserInterfaceUtils;
  */
 public class ReminderListActivity extends ListActivity {
 
+    // Start activity for result
     private static final int ACTIVITY_CREATE = 0;
     private static final int PICKFILE_REQUEST_CODE = 1;
 
@@ -46,8 +50,13 @@ public class ReminderListActivity extends ListActivity {
 
     Spinner yearSpinner;
     Spinner monthSpinner;
-    private List<String> yearSpinnerArray;
-    private List<String> monthSpinnerArray;
+    private List<Integer> yearSpinnerValues;
+    private List<Integer> monthSpinnerValues;
+
+    /**
+     * Reminder count by year and month for the spinners.
+     */
+    private YearsMonthsAndReminders yearsMonthsAndReminders;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -72,55 +81,95 @@ public class ReminderListActivity extends ListActivity {
     }
 
     private void createYearSpinner() {
-        // you need to have a list of data that you want the spinner to display
-        this.yearSpinnerArray =  new ArrayList<>();
-        Integer selectedPosition;
+        Integer previousValue;
+        Integer selectedPosition = null;
 
-        Cursor cursor = this.mDbHelper.fetchAllRemindersByYear();
-        if (cursor != null) {
-            cursor.moveToFirst();
-            while (!cursor.isAfterLast()) {
-                int year = cursor.getInt(cursor.getColumnIndexOrThrow(RemindersDbAdapter.KEY_YEAR));
-                yearSpinnerArray.add(Integer.valueOf(year).toString());
-                cursor.moveToNext();
-            }
-            cursor.close();
+        // Save previous selection.
+        if (this.yearSpinner == null) {
+            previousValue = null;
+        } else {
+            previousValue = this.yearSpinnerValues.get(this.yearSpinner.getSelectedItemPosition());
         }
 
-        String currentYear = Integer.valueOf(Calendar.getInstance().get(Calendar.YEAR)).toString();
+        // Get spinner values and texts.
+        this.yearsMonthsAndReminders = new DataAccessHelper(this.mDbHelper).getAllReminderYears();
+        this.yearSpinnerValues = new ArrayList<>();
+        List<String> yearSpinnerTexts = new ArrayList<>();
+        for (Integer year : this.yearsMonthsAndReminders.getOrderedYears()) {
+            this.yearSpinnerValues.add(year);
+            yearSpinnerTexts.add(year + " (" + this.yearsMonthsAndReminders.getRemindersByYear(year) + ")");
+        }
+
+        int currentYear = Calendar.getInstance().get(Calendar.YEAR);
 
         // If no reminders, no years, and spinner is empty. Put current year for aesthetics.
-        if (yearSpinnerArray.isEmpty()) {
-            yearSpinnerArray.add(currentYear);
+        if (yearSpinnerValues.isEmpty()) {
+            yearSpinnerValues.add(currentYear);
+            yearSpinnerTexts.add(currentYear + " (" + this.yearsMonthsAndReminders.getRemindersByYear(currentYear) + ")");
         }
 
-        int index = yearSpinnerArray.indexOf(currentYear);
-        if (index == -1) {
-            selectedPosition = null;
-        } else {
+        // Leave selected the previous value, if possible.
+        if (previousValue != null) {
+            int index = 0;
+            for (Integer value : this.yearSpinnerValues) {
+                if (value.equals(previousValue)) {
+                    selectedPosition = index;
+                    break;
+                }
+                index++;
+            }
+        }
+
+        // If no value is selected, select the current year, if it is present.
+        int index = yearSpinnerValues.indexOf(currentYear);
+        if ((selectedPosition == null) && (index != -1)) {
             selectedPosition = index;
         }
 
+        // Create the spinner.
         this.yearSpinner = (Spinner) findViewById(R.id.year_spinner);
-        this.yearSpinner.setOnItemSelectedListener(new ListActivitySpinnerListener(this, "year"));
-        UserInterfaceUtils.setSpinnerLookAndFeel(this, this.yearSpinner, yearSpinnerArray);
+        this.yearSpinner.setOnItemSelectedListener(new ListActivitySpinnerListener(this, "year", true));
+        UserInterfaceUtils.setSpinnerLookAndFeel(this, this.yearSpinner, yearSpinnerTexts);
         if (selectedPosition != null) {
             this.yearSpinner.setSelection(selectedPosition);
         }
     }
 
-    private void createMonthSpinner() {
+    private List<String> getMonthSpinnerTexts() {
+        int currentlySelectedYear = this.yearSpinnerValues.get(this.yearSpinner.getSelectedItemPosition());
+        List<String> monthSpinnerArray = new ArrayList<>();
+        for (int item : monthSpinnerValues) {
+            monthSpinnerArray.add((item + 1) + " (" + this.yearsMonthsAndReminders.getRemindersByYearAndMonth(currentlySelectedYear, item) + ")");
+        }
+        return monthSpinnerArray;
+    }
+
+    public void createMonthSpinner() {
+        Integer previousPosition;
+        // Save previous selection.
+        if (this.monthSpinner == null) {
+            previousPosition = null;
+        } else {
+            previousPosition = this.monthSpinner.getSelectedItemPosition();
+        }
+
         // you need to have a list of data that you want the spinner to display
-        this.monthSpinnerArray =  new ArrayList<>();
-        int currentMonth = Calendar.getInstance().get(Calendar.MONTH);
-        for (int i = 1;i <= 12;i++) {
-            this.monthSpinnerArray.add(Integer.valueOf(i).toString());
+        this.monthSpinnerValues =  new ArrayList<>();
+        for (int i = 0;i <= 11;i++) {
+            this.monthSpinnerValues.add(i);
         }
 
         this.monthSpinner = (Spinner) findViewById(R.id.month_spinner);
-        this.monthSpinner.setOnItemSelectedListener(new ListActivitySpinnerListener(this, "month"));
-        UserInterfaceUtils.setSpinnerLookAndFeel(this, this.monthSpinner, this.monthSpinnerArray);
-        this.monthSpinner.setSelection(currentMonth);
+        this.monthSpinner.setOnItemSelectedListener(new ListActivitySpinnerListener(this, "month", false));
+        UserInterfaceUtils.setSpinnerLookAndFeel(this, this.monthSpinner, this.getMonthSpinnerTexts());
+
+        if (previousPosition == null) {
+            // Month starts from 0. Position is the same.
+            int currentMonth = Calendar.getInstance().get(Calendar.MONTH);
+            this.monthSpinner.setSelection(currentMonth);
+        } else {
+            this.monthSpinner.setSelection(previousPosition);
+        }
     }
 
     /**
@@ -132,10 +181,10 @@ public class ReminderListActivity extends ListActivity {
             stopManagingCursor(this.remindersCursor);
         }
 
-        int year = Integer.valueOf(this.yearSpinnerArray.get(this.yearSpinner.getSelectedItemPosition()));
-        int month = Integer.valueOf(this.monthSpinnerArray.get(this.monthSpinner.getSelectedItemPosition()));
+        int year = this.yearSpinnerValues.get(this.yearSpinner.getSelectedItemPosition());
+        int month = this.monthSpinnerValues.get(this.monthSpinner.getSelectedItemPosition());
         Logger.log("Data for listing reminders is going to be retrieved from database for year " + year + ", month " + month + ".");
-        this.remindersCursor = mDbHelper.fetchAllReminders(year, month - 1);
+        this.remindersCursor = mDbHelper.fetchAllReminders(year, month);
         startManagingCursor(remindersCursor);
         // Create an array to specify the fields we want (only the TITLE)
         String[] from = new String[]{RemindersDbAdapter.KEY_TITLE, RemindersDbAdapter.KEY_DATE_TIME, RemindersDbAdapter.KEY_NOTIFIED};
@@ -277,7 +326,7 @@ public class ReminderListActivity extends ListActivity {
     private BroadcastReceiver broadcastBufferReceiver = new BroadcastReceiver() {
         @Override
         public void onReceive(Context context, Intent bufferIntent) {
-            ReminderListActivity.this.fillData();
+            ReminderListActivity.this.createSpinnersAndFillData();
         }
     };
 

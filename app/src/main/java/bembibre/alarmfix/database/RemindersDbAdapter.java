@@ -53,6 +53,10 @@ public class RemindersDbAdapter {
     public static final String KEY_ALARM_ID = "alarm_id";
 
     public static final String KEY_YEAR = "year";
+
+    /**
+     * The month starts from 0 respecting the Java format.
+     */
     public static final String KEY_MONTH = "month";
 
     /**
@@ -223,7 +227,7 @@ public class RemindersDbAdapter {
 
     public Cursor fetchAllRemindersByYear() {
         // Select year, group by year (avoid repetition), order by year (ascending).
-        return mDb.query(DATABASE_TABLE, new String[] {KEY_YEAR}, null, null, KEY_YEAR, null, KEY_YEAR);
+        return mDb.rawQuery("select count(*), " + KEY_YEAR + ", " + KEY_MONTH + " from " + DATABASE_TABLE + " GROUP BY " + KEY_YEAR + ", " + KEY_MONTH + " ORDER BY " + KEY_YEAR + ", " + KEY_MONTH, null);
     }
 
     /**

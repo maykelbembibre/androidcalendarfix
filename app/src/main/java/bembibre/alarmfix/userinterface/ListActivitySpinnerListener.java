@@ -12,6 +12,7 @@ import bembibre.alarmfix.logging.Logger;
 
 public class ListActivitySpinnerListener implements AdapterView.OnItemSelectedListener {
 
+    private final boolean isYear;
     private ReminderListActivity listActivity;
 
     /**
@@ -31,14 +32,18 @@ public class ListActivitySpinnerListener implements AdapterView.OnItemSelectedLi
      * @param listActivity the activity.
      * @param name name of the spinner for debugging purposes.
      */
-    public ListActivitySpinnerListener(ReminderListActivity listActivity, String name) {
+    public ListActivitySpinnerListener(ReminderListActivity listActivity, String name, boolean isYear) {
         this.listActivity = listActivity;
         this.name = name;
+        this.isYear = isYear;
     }
 
     @Override
     public void onItemSelected(AdapterView<?> parentView, View selectedItemView, int position, long id) {
         if (spinnerEnabled) {
+            if (isYear) {
+                listActivity.createMonthSpinner();
+            }
             listActivity.fillData();
         } else {
             spinnerEnabled = true;

@@ -104,7 +104,7 @@ public class UserInterfaceUtils {
         // Sets the layout of items and dropdown items.
         ArrayAdapter<String> adapter = new ArrayAdapter<>(
                 context, R.layout.spinner_item, items);
-        adapter.setDropDownViewResource(android.R.layout.simple_spinner_dropdown_item);
+        adapter.setDropDownViewResource(R.layout.spinner_dropdown_item);
 
         // Sets the color of the small triangle.
         spinner.getBackground().setColorFilter(context.getResources().getColor(R.color.actionBarForeground), PorterDuff.Mode.SRC_ATOP);
