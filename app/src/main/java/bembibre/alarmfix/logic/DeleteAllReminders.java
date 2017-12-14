@@ -2,11 +2,11 @@ package bembibre.alarmfix.logic;
 
 import android.app.ProgressDialog;
 import android.content.Context;
-import android.net.Uri;
 import android.os.AsyncTask;
 import android.support.annotation.NonNull;
 
 import bembibre.alarmfix.R;
+import bembibre.alarmfix.core.SynchronizedWork;
 import bembibre.alarmfix.userinterface.UserInterfaceUtils;
 
 /**
@@ -40,7 +40,7 @@ public class DeleteAllReminders extends AsyncTask<Void, Float, Boolean> {
      *
      * @param progress
      */
-    void publishProgressFromOutside(float progress) {
+    public void publishProgressFromOutside(float progress) {
         this.publishProgress(progress);
     }
 

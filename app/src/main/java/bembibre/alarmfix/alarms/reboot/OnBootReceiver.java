@@ -5,7 +5,7 @@ import android.content.Context;
 import android.content.Intent;
 
 import bembibre.alarmfix.alarms.ReminderManager;
-import bembibre.alarmfix.logic.SynchronizedWork;
+import bembibre.alarmfix.core.SynchronizedWork;
 import bembibre.alarmfix.database.RemindersDbAdapter;
 
 /**

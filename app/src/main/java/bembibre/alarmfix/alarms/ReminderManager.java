@@ -44,7 +44,10 @@ public class ReminderManager {
      * @param when    when.
      */
     public void setReminder(long taskId, long alarmId, Calendar when) throws AlarmException {
-        PendingIntent pi = getReminderPendingIntent(taskId, alarmId, PendingIntent.FLAG_UPDATE_CURRENT);
+        Intent i = new Intent(mContext, OnAlarmReceiver.class);
+        i.putExtra(RemindersDbAdapter.KEY_ROWID, taskId);
+        i.putExtra(ReminderManager.EXTRA_ALARM_ID, alarmId);
+        PendingIntent pi = getReminderPendingIntent(i, taskId);
 
         try {
             this.setAlarm(pi, when);
@@ -62,11 +65,11 @@ public class ReminderManager {
      * system.
      *
      * @param taskId  database identifier of the reminder.
-     * @param alarmId number that helps distinguishing each one of the alarms set for a same reminder.
      * @param date    date for logging purposes.
      */
-    public void unsetReminder(long taskId, long alarmId, String date) {
-        PendingIntent pi = getReminderPendingIntent(taskId, alarmId, PendingIntent.FLAG_UPDATE_CURRENT);
+    public void unsetReminder(long taskId, String date) {
+        Intent i = new Intent(mContext, OnAlarmReceiver.class);
+        PendingIntent pi = getReminderPendingIntent(i, taskId);
         mAlarmManager.cancel(pi);
         Logger.log("An alarm has been unset successfully for the reminder at " + date + ". Reminder id: " + taskId);
     }
@@ -75,16 +78,12 @@ public class ReminderManager {
      * Returns the <code>PendingIntent</code> object that must be used for calling this application
      * when a reminder's alarm triggers.
      *
-     * @param taskId  the number that identifies the associated reminder in the database.
-     * @param alarmId incremental identifier for each alarm of the same reminder.
-     * @param flag    flag that controls the behaviour of the pending intent.
+     * @param i the intent to be used.
+     * @param taskId reminder database identifier, it distingishes each alarm from the others.
      * @return the <code>PendingIntent</code> object.
      */
-    private PendingIntent getReminderPendingIntent(long taskId, long alarmId, int flag) {
-        Intent i = new Intent(mContext, OnAlarmReceiver.class);
-        i.putExtra(RemindersDbAdapter.KEY_ROWID, taskId);
-        i.putExtra(ReminderManager.EXTRA_ALARM_ID, alarmId);
-        PendingIntent pi = PendingIntent.getBroadcast(mContext, (int)taskId, i, flag);
+    private PendingIntent getReminderPendingIntent(Intent i, long taskId) {
+        PendingIntent pi = PendingIntent.getBroadcast(mContext, (int)taskId, i, PendingIntent.FLAG_UPDATE_CURRENT);
         return pi;
     }
 

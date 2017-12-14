@@ -1,4 +1,4 @@
-package bembibre.alarmfix.logic.models;
+package bembibre.alarmfix.models;
 
 import org.json.JSONException;
 import org.json.JSONObject;
