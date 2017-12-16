@@ -5,8 +5,12 @@ import android.content.Context;
 import android.content.Intent;
 
 import bembibre.alarmfix.alarms.ReminderManager;
+import bembibre.alarmfix.alarms.WakeReminderIntentService;
+import bembibre.alarmfix.alarms.intentservices.BootService;
+import bembibre.alarmfix.alarms.intentservices.ReminderService;
 import bembibre.alarmfix.core.SynchronizedWork;
 import bembibre.alarmfix.database.RemindersDbAdapter;
+import bembibre.alarmfix.logging.Logger;
 
 /**
  * Created by Max Power on 12/08/2017.
@@ -18,8 +22,9 @@ import bembibre.alarmfix.database.RemindersDbAdapter;
 public class OnBootReceiver extends BroadcastReceiver {
     @Override
     public void onReceive(Context context, Intent intent) {
-        ReminderManager reminderMgr = new ReminderManager(context);
-        RemindersDbAdapter dbHelper = RemindersDbAdapter.getInstance(context);
-        SynchronizedWork.phoneHasJustBeenTurnedOn(context, reminderMgr, dbHelper);
+        Logger.log("The phone has just been turned on.");
+        WakeReminderIntentService.acquireStaticLock(context);
+        Intent i = new Intent(context, BootService.class);
+        context.startService(i);
     }
 }

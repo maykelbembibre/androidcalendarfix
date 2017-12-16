@@ -26,7 +26,8 @@
         </activity>
         <activity android:name=".ReminderEditActivity"></activity>
         <receiver android:name=".alarms.OnAlarmReceiver" />
-        <service android:name=".alarms.ReminderService" />
+        <service android:name=".alarms.intentservices.ReminderService" />
+        <service android:name=".alarms.intentservices.BootService" />
         <receiver android:name=".alarms.reboot.OnBootReceiver">
             <intent-filter>
                 <action android:name="android.intent.action.BOOT_COMPLETED" />
