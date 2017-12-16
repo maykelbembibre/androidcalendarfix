@@ -3,26 +3,32 @@
     android:layout_width="fill_parent"
     android:layout_height="fill_parent"
     android:orientation="vertical"
-    android:padding="10dip">
+    android:padding="@dimen/list_row_padding">
 
-    <FrameLayout
+    <RelativeLayout
         android:id="@+id/item_frame_layout"
         android:layout_width="fill_parent"
         android:layout_height="fill_parent"
         >
 
         <TextView
-            android:id="@+id/text1"
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:layout_gravity="left" />
-
-        <TextView
             android:id="@+id/text2"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
-            android:layout_gravity="right" />
-    </FrameLayout>
+            android:layout_alignParentRight="true"
+            android:layout_alignParentEnd="true"
+            android:layout_marginLeft="@dimen/list_row_padding"
+            android:layout_marginStart="@dimen/list_row_padding"/>
+
+        <TextView
+            android:id="@+id/text1"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_alignParentLeft="true"
+            android:layout_alignParentStart="true"
+            android:layout_toLeftOf="@+id/text2"
+            android:layout_toStartOf="@+id/text2"/>
+    </RelativeLayout>
     <FrameLayout
         android:id="@+id/item_frame_layout_2"
         android:layout_width="fill_parent"
