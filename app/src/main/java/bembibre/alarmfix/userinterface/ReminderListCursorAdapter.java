@@ -29,8 +29,11 @@ import bembibre.alarmfix.utils.GeneralUtils;
  */
 public class ReminderListCursorAdapter extends SimpleCursorAdapter {
 
+    private String dateFormat;
+
     public ReminderListCursorAdapter(Context context, int layout, Cursor c, String[] from, int[] to) {
         super(context, layout, c, from, to);
+        this.dateFormat = context.getResources().getString(R.string.date_time_readable_format);
     }
 
     @Override
@@ -38,7 +41,7 @@ public class ReminderListCursorAdapter extends SimpleCursorAdapter {
         if (v.getId() == R.id.text2) { // Make sure it matches your time field
             // Special date formatting for the field that shows the reminder date.
 
-            DateFormat dateFormat = new SimpleDateFormat(GeneralUtils.DATE_TIME_FORMAT);
+            DateFormat dateFormat = new SimpleDateFormat(this.dateFormat);
             // You may want to try/catch with NumberFormatException in case `text` is not a numeric value
             text = dateFormat.format(new Date(Long.parseLong(text)));
         } else if (v.getId() == R.id.text3) {
