@@ -18,7 +18,7 @@ import bembibre.alarmfix.storage.Storage;
 public class Logger {
     private static final String DIRECTORY_NAME = "Alarm fix logs";
     private static final int PRESERVED_FILES = 3;
-    private static final DateFormat DATE_FORMAT = new SimpleDateFormat("dd/MM/yyyy HH:mm:ss");
+    private static final DateFormat DATE_FORMAT = new SimpleDateFormat("yyyy/MM/dd HH:mm:ss");
     private static final DateFormat FILE_NAME_DATE_FORMAT = new SimpleDateFormat("yyyy-MM");
     private static File logsDirectory;
     private static List<String> managedFiles;
