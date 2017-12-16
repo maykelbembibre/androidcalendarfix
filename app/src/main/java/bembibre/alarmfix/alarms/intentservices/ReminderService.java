@@ -1,7 +1,8 @@
-package bembibre.alarmfix.alarms;
+package bembibre.alarmfix.alarms.intentservices;
 
 import android.content.Intent;
 
+import bembibre.alarmfix.alarms.WakeReminderIntentService;
 import bembibre.alarmfix.core.SynchronizedWork;
 
 /**
@@ -18,7 +19,7 @@ public class ReminderService extends WakeReminderIntentService {
     }
 
     @Override
-    void doReminderWork(Intent intent) {
+    protected void doReminderWork(Intent intent) {
         SynchronizedWork.reminderAlarmReceived(this, intent);
     }
 }

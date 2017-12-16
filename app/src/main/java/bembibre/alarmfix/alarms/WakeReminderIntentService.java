@@ -38,5 +38,5 @@ public abstract class WakeReminderIntentService extends IntentService {
         }
     }
 
-    abstract void doReminderWork(Intent intent);
+    protected abstract void doReminderWork(Intent intent);
 }

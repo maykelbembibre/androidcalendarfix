@@ -42,6 +42,7 @@
 
     <string name="menu_delete">Delete this element</string>
     <string name="task_saved_message">Task saved successfully</string>
+    <string name="boot_received">Alarm Fix: alarms configured</string>
     <string name="notifiy_new_task_title">Reminder</string>
     <string name="notify_new_task_message">New reminder</string>
     <string name="notify_multiple_reminders_title">You\'ve got %1$d pending reminders</string>
