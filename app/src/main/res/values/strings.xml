@@ -1,5 +1,5 @@
 <resources>
-    <string name="app_name">Alarm Fix New</string>
+    <string name="app_name">Alarm Fix</string>
     <string name="options_menu_text">Options</string>
     <string name="reminder_does_not_exist">You have been notified of a reminder that you erased, so the application will exit because there is nothing to do.</string>
     <string name="unable_to_set_alarm">The system doesn\'t let us to set a new reminder right now. Perhaps you should delete old reminders for having free space. I don\'t know.</string>
@@ -42,7 +42,7 @@
 
     <string name="menu_delete">Delete this element</string>
     <string name="task_saved_message">Task saved successfully</string>
-    <string name="boot_received">Alarm Fix: alarms configured</string>
+    <string name="task_saved_message">Alarm Fix: alarms configured</string>
     <string name="notifiy_new_task_title">Reminder</string>
     <string name="notify_new_task_message">New reminder</string>
     <string name="notify_multiple_reminders_title">You\'ve got %1$d pending reminders</string>

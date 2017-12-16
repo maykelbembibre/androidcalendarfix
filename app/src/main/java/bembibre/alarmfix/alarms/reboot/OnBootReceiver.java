@@ -24,7 +24,7 @@ public class OnBootReceiver extends BroadcastReceiver {
     public void onReceive(Context context, Intent intent) {
         Logger.log("The phone has just been turned on.");
         WakeReminderIntentService.acquireStaticLock(context);
-        Intent secondIntent = new Intent(context, BootService.class);
-        context.startService(secondIntent);
+        Intent i = new Intent(context, BootService.class);
+        context.startService(i);
     }
 }
