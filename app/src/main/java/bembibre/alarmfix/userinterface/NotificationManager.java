@@ -43,7 +43,13 @@ public class NotificationManager {
             remindersNumber++;
         }
         if (remindersNumber > 0) {
-            String notificationTitle = this.context.getResources().getString(R.string.notify_multiple_reminders_title, remindersNumber);
+            int string;
+            if (remindersNumber == 1) {
+                string = R.string.notify_multiple_reminders_title_single;
+            } else {
+                string = R.string.notify_multiple_reminders_title_plural;
+            }
+            String notificationTitle = this.context.getResources().getString(string, remindersNumber);
             this.makeNotification(null, notificationTitle, notificationBody.toString());
             Logger.log("A notification has just been thrown for multiple reminders.");
         }

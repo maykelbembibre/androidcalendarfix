@@ -45,7 +45,8 @@
     <string name="boot_received">Alarmas configuradas correctamente</string>
     <string name="notifiy_new_task_title">Recordatorio</string>
     <string name="notify_new_task_message">Nuevo recordatorio</string>
-    <string name="notify_multiple_reminders_title">Tienes %1$d recordatorios sin revisar</string>
+    <string name="notify_multiple_reminders_title_single">Tienes %1$d recordatorio sin revisar</string>
+    <string name="notify_multiple_reminders_title_plural">Tienes %1$d recordatorios sin revisar</string>
     <string name="default_reminder_title">(Sin título)</string>
     <string name="date_time_readable_format">dd-MM-yyyy kk:mm</string>
     <string name="notified">Avisado</string>
