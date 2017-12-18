@@ -1,0 +1,59 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="app_name">Avisos que funcionan</string>
+    <string name="options_menu_text">Opciones</string>
+    <string name="reminder_does_not_exist">Has sido notificado de un recordatorio pero ya lo borraste, así que la aplicación se va a cerrar porque esta notificación ya no vale.</string>
+    <string name="unable_to_set_alarm">El sistema no permite insertar la alarma para avisar de este recordatorio, puede que te estés quedando sin espacio en la memoria. No es culpa de esta aplicación eso ya te lo digo yo.</string>
+    <string name="no_reminders">Lista vacía.</string>
+    <string name="title">Título</string>
+    <string name="body">Contenido</string>
+    <string name="date">Fecha</string>
+    <string name="time">Hora</string>
+    <string name="confirm">Guardar</string>
+
+    <!-- Types of dialogs to the user -->
+    <string name="info_dialog_title">Información</string>
+    <string name="alert_dialog_title">Ojo</string>
+
+    <!-- Options menu -->
+    <string name="menu_insert">Crear recordatorio</string>
+    <string name="export_reminders">Exportar a fichero</string>
+    <string name="import_reminders">Importar de fichero</string>
+    <string name="delete_reminders">Borrar todos los recordatorios</string>
+
+    <!-- Data export -->
+    <string name="exporting_message">Los datos se están exportando.</string>
+    <string name="export_success">Los datos se exportaron con éxito.</string>
+    <string name="export_failure">La base de datos está esquiva. Por favor, inténtalo más tarde.</string>
+
+    <!-- Data import -->
+    <string name="importing_message">Los datos se están importando</string>
+    <string name="import_confirmation">¿Estás seguro de que quieres continuar? Esta operación borrará todo lo que tuvieras antes.</string>
+    <string name="import_success">Los datos se importaron. Correctos: %1$d. Errores: %2$d.</string>
+    <string name="import_format_error">Has escogido un archivo que no vale.</string>
+    <string name="import_path_error">Has escogido un fichero con un tipo de almacenamiento que no vale. Intenta seleccionarlo por otra aplicación.</string>
+    <string name="import_storage_error">No se puede acceder al fichero porque tu dispositivo no me ha dejado y se ha quedado tan ancho.</string>
+    <string name="import_failure">Hubo un problema al importar los datos. Por favor, inténtalo más tarde y asegúrate de que escoges un fichero válido.</string>
+
+    <!-- Data deletion -->
+    <string name="deleting_confirmation">¿Seguro que quieres cargártelo todo?</string>
+    <string name="deleting_message">Borrando datos.</string>
+    <string name="delete_success">Todos los datos fueron borrados.</string>
+    <string name="delete_failure">La base de datos está esquiva.</string>
+
+    <string name="menu_delete">Borrar recordatorio</string>
+    <string name="task_saved_message">Recordatorio guardado</string>
+    <string name="boot_received">Alarmas configuradas correctamente</string>
+    <string name="notifiy_new_task_title">Recordatorio</string>
+    <string name="notify_new_task_message">Nuevo recordatorio</string>
+    <string name="notify_multiple_reminders_title">Tienes %1$d recordatorios sin revisar</string>
+    <string name="default_reminder_title">(Sin título)</string>
+    <string name="date_time_readable_format">dd-MM-yyyy kk:mm</string>
+    <string name="notified">Avisado</string>
+    <string name="not_notified">Sin avisar</string>
+    <string name="total_reminders">Recordatorios totales</string>
+    <string name="progress">Progreso</string>
+
+    <string name="yes">Sí</string>
+    <string name="no">No</string>
+</resources>
