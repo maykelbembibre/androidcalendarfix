@@ -305,9 +305,16 @@ public class ReminderListActivity extends ListActivity {
                 this.createSpinnersAndFillData();
                 break;
             case PICKFILE_REQUEST_CODE:
-                Uri uri = intent.getData();
-                Logger.log("Importing files from URI " + uri.getPath());
-                new DataImport(this).execute(uri);
+                Uri uri;
+                if (intent == null) {
+                    uri = null;
+                } else {
+                    uri = intent.getData();
+                }
+                if (uri != null) {
+                    Logger.log("Importing files from URI " + uri.getPath());
+                    new DataImport(this).execute(uri);
+                }
                 break;
         }
         super.onActivityResult(requestCode, resultCode, intent);
