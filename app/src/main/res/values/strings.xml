@@ -45,7 +45,8 @@
     <string name="boot_received">Alarm Fix: alarms configured</string>
     <string name="notifiy_new_task_title">Reminder</string>
     <string name="notify_new_task_message">New reminder</string>
-    <string name="notify_multiple_reminders_title">You\'ve got %1$d pending reminders</string>
+    <string name="notify_multiple_reminders_title_single">You\'ve got %1$d pending reminder</string>
+    <string name="notify_multiple_reminders_title_plural">You\'ve got %1$d pending reminders</string>
     <string name="default_reminder_title">(No title)</string>
     <string name="date_time_readable_format">yyyy-MM-dd kk:mm</string>
     <string name="notified">Notified</string>
