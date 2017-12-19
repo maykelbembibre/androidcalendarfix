@@ -20,7 +20,7 @@ public class CoreOperations {
 
     public static final String BROADCAST_BUFFER_SEND_CODE = "com.example.SEND_CODE";
 
-    public static void notifyReminder(Context context, long rowId, long receivedAlarmId) throws Exception {
+    static void notifyReminder(Context context, long rowId, long receivedAlarmId) throws Exception {
         // Status bar notification Code Goes here.
         String reminderTitle;
         long alarmId;
