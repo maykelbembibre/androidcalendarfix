@@ -84,11 +84,15 @@ public class Logger {
     private static List<String> getManagedFiles(File logsDirectory) {
         if (Logger.managedFiles == null) {
             File[] files = logsDirectory.listFiles();
-            Logger.managedFiles = new ArrayList<>();
-            for (File file : files) {
-                Logger.managedFiles.add(file.getName());
+
+            // If it is null that indicates an IO error.
+            if (files != null) {
+                Logger.managedFiles = new ArrayList<>();
+                for (File file : files) {
+                    Logger.managedFiles.add(file.getName());
+                }
+                Collections.sort(Logger.managedFiles, String.CASE_INSENSITIVE_ORDER);
             }
-            Collections.sort(Logger.managedFiles, String.CASE_INSENSITIVE_ORDER);
         }
         return Logger.managedFiles;
     }
@@ -103,27 +107,32 @@ public class Logger {
             currentFile = new File(logsDirectory, currentFileName);
             if (!currentFile.exists()) {
                 List<String> managedFiles = Logger.getManagedFiles(logsDirectory);
-                int length = managedFiles.size();
-                int top = length - Logger.PRESERVED_FILES;
-                int index;
-                File file;
-                String name;
-                for (index = 0;index < top;index++) {
-                    name = managedFiles.get(index);
-                    file = new File(logsDirectory, name);
-
-                    // If the file doesn't exist, returns false and nothing happens.
-                    file.delete();
-                    managedFiles.remove(index);
-                    System.out.println("Removed log file for obsolescence: " + name);
-                }
-                try {
-                    currentFile.createNewFile();
-                } catch (IOException e) {
+                if (managedFiles == null) {
+                    // IO error occured. Maybe there are not still storage permissions.
                     currentFile = null;
-                }
-                if (currentFile != null) {
-                    managedFiles.add(currentFileName);
+                } else{
+                    int length = managedFiles.size();
+                    int top = length - Logger.PRESERVED_FILES;
+                    int index;
+                    File file;
+                    String name;
+                    for (index = 0; index < top; index++) {
+                        name = managedFiles.get(index);
+                        file = new File(logsDirectory, name);
+
+                        // If the file doesn't exist, returns false and nothing happens.
+                        file.delete();
+                        managedFiles.remove(index);
+                        System.out.println("Removed log file for obsolescence: " + name);
+                    }
+                    try {
+                        currentFile.createNewFile();
+                    } catch (IOException e) {
+                        currentFile = null;
+                    }
+                    if (currentFile != null) {
+                        managedFiles.add(currentFileName);
+                    }
                 }
             }
         }
