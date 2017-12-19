@@ -86,7 +86,11 @@ class AlarmChainManager {
 
                     cursor.moveToNext();
                 }
-                new NotificationManager(context).notifyMultipleReminders(pendingReminders);
+                try {
+                    new NotificationManager(context).notifyMultipleReminders(pendingReminders);
+                } catch (Exception e) {
+                    Logger.log("Unable to notify pending reminders because there was an exception.", e);
+                }
                 cursor.close();
                 if (!alarmSet) {
                     Logger.log("No need for setting any alarm for now. The user hasn't got any future reminder.");
