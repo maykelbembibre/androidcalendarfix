@@ -99,7 +99,11 @@ public class SynchronizedWork {
 
                     cursor.moveToNext();
                 }
-                new NotificationManager(context).notifyMultipleReminders(pendingReminders);
+                try {
+                    new NotificationManager(context).notifyMultipleReminders(pendingReminders);
+                } catch (Exception e) {
+                    Logger.log("Unable to notify.");
+                }
                 Logger.log("Telephone has been turned on. Reminders set for the future: " + remindersSet + ". Reminders not set because of an alarm problem: " + remindersNotSetAlarmException + ".");
                 cursor.close();
             }
