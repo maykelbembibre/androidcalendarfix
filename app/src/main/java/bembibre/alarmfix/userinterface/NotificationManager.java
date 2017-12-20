@@ -44,7 +44,7 @@ public class NotificationManager {
      * @throws Exception when Android refuses to give access to the notifications service.
      */
     public void notifySingleReminder(long rowId, String reminderTitle) throws Exception {
-        makeNotification(rowId, this.context.getResources().getString(R.string.notifiy_new_task_title), reminderTitle);
+        makeNotification(rowId, this.context.getResources().getString(R.string.notifiy_new_task_title), reminderTitle, true);
 
         Logger.log("A notification has just been thrown for a received alarm.");
     }
@@ -74,9 +74,13 @@ public class NotificationManager {
                 string = R.string.notify_multiple_reminders_title_plural;
             }
             String notificationTitle = this.context.getResources().getString(string, remindersNumber);
-            this.makeNotification(null, notificationTitle, notificationBody.toString());
+            this.makeNotification(null, notificationTitle, notificationBody.toString(), true);
             Logger.log("A notification has just been thrown for multiple reminders.");
         }
+    }
+
+    public void makeGeneralNotification(String title, String body) throws Exception {
+        this.makeNotification(null, title, body, false);
     }
 
     /**
@@ -88,7 +92,7 @@ public class NotificationManager {
      *
      * @throws Exception when Android refuses to give access to the notifications service.
      */
-    private void makeNotification(Long rowId, String title, String body) throws Exception {
+    private void makeNotification(Long rowId, String title, String body, boolean autoCancel) throws Exception {
         android.app.NotificationManager mgr = (android.app.NotificationManager)context.getSystemService(NOTIFICATION_SERVICE);
         if (mgr == null) {
             throw new Exception("Android gives no access to the notifications service.");
@@ -145,7 +149,9 @@ public class NotificationManager {
         Notification note = mBuilder.build();
 
         note.defaults |= Notification.DEFAULT_SOUND;
-        note.flags |= Notification.FLAG_AUTO_CANCEL;
+        if (autoCancel) {
+            note.flags |= Notification.FLAG_AUTO_CANCEL;
+        }
 
         // An issue could occur if user ever enters over 2,147,483,647 tasks. (Max int value).
         // I highly doubt this will ever happen. But is good to note.
