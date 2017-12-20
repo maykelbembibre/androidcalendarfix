@@ -53,6 +53,7 @@
     <string name="not_notified">Not notified</string>
     <string name="total_reminders">Total reminders</string>
     <string name="progress">Progress</string>
+    <string name="service_error">Unable to run application service. Configure your phone for allowing applications to run background services and restart the phone.</string>
 
     <string name="yes">Yes</string>
     <string name="no">No</string>
