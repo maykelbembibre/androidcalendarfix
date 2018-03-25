@@ -44,8 +44,8 @@ class AlarmChainManager {
             } else {
                 List<String> pendingReminders = new ArrayList<>();
                 cursor.moveToFirst();
-                int rowIdColumnIndex = cursor.getColumnIndex(RemindersDbAdapter.KEY_ROWID);
-                int dateTimeColumnIndex = cursor.getColumnIndex(RemindersDbAdapter.KEY_DATE_TIME);
+                int rowIdColumnIndex = cursor.getColumnIndex(RemindersDbAdapter.REMINDERS_COLUMN_ROWID);
+                int dateTimeColumnIndex = cursor.getColumnIndex(RemindersDbAdapter.REMINDERS_COLUMN_DATE_TIME);
                 while (!cursor.isAfterLast()) {
                     long rowId = cursor.getLong(rowIdColumnIndex);
                     DateTime dateTime = new DateTime(cursor.getLong(dateTimeColumnIndex));
@@ -53,7 +53,7 @@ class AlarmChainManager {
                     // Handle not notified reminder.
                     if (dateTime.toMillisecondsSinceTheEpoch() <= CoreOperations.getNowDateTimeWithinAWhile()) {
                         // Past reminder.
-                        pendingReminders.add(cursor.getString(cursor.getColumnIndex(RemindersDbAdapter.KEY_TITLE)));
+                        pendingReminders.add(cursor.getString(cursor.getColumnIndex(RemindersDbAdapter.REMINDERS_COLUMN_TITLE)));
 
                         // All the pending reminders are going to be notified.
                         dbAdapter.updateReminder(rowId, true);
@@ -68,7 +68,7 @@ class AlarmChainManager {
                                  */
                                 Calendar cal = Calendar.getInstance();
                                 cal.setTime(new Date(dateTime.toMillisecondsSinceTheEpoch()));
-                                long alarmId = cursor.getLong(cursor.getColumnIndexOrThrow(RemindersDbAdapter.KEY_ALARM_ID));
+                                long alarmId = cursor.getLong(cursor.getColumnIndexOrThrow(RemindersDbAdapter.REMINDERS_COLUMN_ALARM_ID));
                                 reminderManager.setReminder(rowId, alarmId, cal);
                             } else {
                                 // There is at least one future reminder but it is too far away.

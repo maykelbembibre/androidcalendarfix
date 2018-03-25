@@ -7,9 +7,12 @@ import android.content.Intent;
 import android.os.Build;
 
 import java.util.Calendar;
+import java.util.Date;
 
+import bembibre.alarmfix.ReminderListActivity;
 import bembibre.alarmfix.database.RemindersDbAdapter;
 import bembibre.alarmfix.logging.Logger;
+import bembibre.alarmfix.models.Alarm;
 import bembibre.alarmfix.utils.GeneralUtils;
 
 /**
@@ -18,10 +21,22 @@ import bembibre.alarmfix.utils.GeneralUtils;
 public class ReminderManager {
 
     /**
-     * This is the key that identifies a metadata item that is attached to the intent of an alarm of
-     * a reminder for tracking it.
+     * Maximum delay that we consider that an alarm can be delayed to go off without deeming it
+     * as a failure.
      */
-    public static final String EXTRA_ALARM_ID = "extra_alarm_id";
+    private static final long ALARM_MAX_DELAY = 120000;
+
+    /**
+     * This is the key that identifies a metadata item that is attached to the intent of an alarm of
+     * a reminder for telling apart different alarms that could be set for the same reminder.
+     */
+    public static final String EXTRA_REMINDER_ALARM_ID = "extra_alarm_id";
+
+    /**
+     * This is the key that identifies a metadata item that is attached to the intent of an alarm of
+     * a reminder for keeping track into the database of the alarms that are set and pending.
+     */
+    public static final String EXTRA_SET_ALARM_ID = "extra_set_alarm_id";
 
     private Context mContext;
     private AlarmManager mAlarmManager;
@@ -41,12 +56,11 @@ public class ReminderManager {
      */
     public void setReminder(long taskId, long alarmId, Calendar when) throws AlarmException {
         Intent i = new Intent(mContext, OnAlarmReceiver.class);
-        i.putExtra(RemindersDbAdapter.KEY_ROWID, taskId);
-        i.putExtra(ReminderManager.EXTRA_ALARM_ID, alarmId);
-        PendingIntent pi = getReminderPendingIntent(i);
+        i.putExtra(RemindersDbAdapter.REMINDERS_COLUMN_ROWID, taskId);
+        i.putExtra(ReminderManager.EXTRA_REMINDER_ALARM_ID, alarmId);
 
         try {
-            this.setAlarm(pi, when);
+            this.setAlarmInSystemAndDatabase(i, when, taskId);
             Logger.log("An alarm has been set successfully for the reminder at " + GeneralUtils.format(when) + ". Reminder id: " + taskId);
         } catch (Throwable throwable) {
             Logger.log("The system doesn't let us to set an alarm for the reminder at " + GeneralUtils.format(when));
@@ -56,9 +70,8 @@ public class ReminderManager {
 
     public void setNextAlarmCheckReminder(Calendar when) throws AlarmException {
         Intent i = new Intent(mContext, OnAlarmReceiver.class);
-        PendingIntent pi = getReminderPendingIntent(i);
         try {
-            this.setAlarm(pi, when);
+            this.setAlarmInSystemAndDatabase(i, when, null);
             Logger.log("An alarm has been set successfully for the next reminder check at " + GeneralUtils.format(when) + ".");
         } catch (Throwable throwable) {
             Logger.log("The system doesn't let us to set an alarm for the next reminder check at " + GeneralUtils.format(when));
@@ -67,12 +80,66 @@ public class ReminderManager {
     }
 
     /**
-     * Unsets the alarm, if it is set.
+     * Unsets any alarm either for reminder or for next alarm check that was set through this class.
+     *
+     * Also, deletes all references to that alarms that could be stored at database.
      */
     public void unsetAlarm() {
-        Intent i = new Intent(mContext, OnAlarmReceiver.class);
-        PendingIntent pi = getReminderPendingIntent(i);
-        mAlarmManager.cancel(pi);
+        RemindersDbAdapter dbAdapter = RemindersDbAdapter.getInstance(this.mContext);
+        dbAdapter.open();
+
+        try {
+            dbAdapter.beginTransaction();
+
+            // Delete alarm reference in the database.
+            dbAdapter.deleteAllAlarms();
+
+            // Cancel the alarm into the Android system.
+            Intent i = new Intent(mContext, OnAlarmReceiver.class);
+            PendingIntent pi = getReminderPendingIntent(i);
+            mAlarmManager.cancel(pi);
+
+            // No exceptions, all okay.
+            dbAdapter.setTransactionSuccessful();
+
+            Logger.log("Every alarm references have been deleted from the database.");
+        } finally {
+            dbAdapter.endTransaction();
+            dbAdapter.close();
+        }
+    }
+
+    /**
+     * Returns true if and only if alarms health is allright, in other words, if there isn't any
+     * past alarm that has failed to go off in time.
+     *
+     * Note that nowadays almost every phone includes a fucking power manager that prevents alarms
+     * off applications to go off because it is thought that that saves battery.
+     *
+     * @return true if there isn't any past alarm that failed to go off.
+     */
+    public boolean checkAlarmsHealth() {
+        boolean result;
+
+        RemindersDbAdapter dbAdapter = RemindersDbAdapter.getInstance(this.mContext);
+        dbAdapter.open();
+
+        try {
+            Alarm earliestAlarm = dbAdapter.fetchEarliestAlarm();
+            if (earliestAlarm == null) {
+                result = true;
+            } else {
+                long limit = new Date().getTime() - ALARM_MAX_DELAY;
+                if (earliestAlarm.getTime() < limit) {
+                    result = false;
+                } else {
+                    result = true;
+                }
+            }
+        } finally {
+            dbAdapter.close();
+        }
+        return result;
     }
 
     /**
@@ -110,7 +177,33 @@ public class ReminderManager {
              * If we use the setExactAndAllowWhileIdle the user will see nothing, but the OS can
              * delay alarms at some sort of situations.
              */
-            mAlarmManager.setExactAndAllowWhileIdle(AlarmManager.RTC_WAKEUP, when.getTimeInMillis(), operation);
+            //mAlarmManager.setExactAndAllowWhileIdle(AlarmManager.RTC_WAKEUP, when.getTimeInMillis(), operation);
+            Intent alarmClockIntent = new Intent(this.mContext, ReminderListActivity.class);
+            PendingIntent showIntent = PendingIntent.getActivity(this.mContext, 0, alarmClockIntent,
+                    PendingIntent.FLAG_UPDATE_CURRENT);
+            mAlarmManager.setAlarmClock(new AlarmManager.AlarmClockInfo(when.getTimeInMillis(), showIntent), operation);
+        }
+    }
+
+    private void setAlarmInSystemAndDatabase(Intent intent, Calendar when, Long taskId) throws Throwable {
+        RemindersDbAdapter dbAdapter = RemindersDbAdapter.getInstance(this.mContext);
+        dbAdapter.open();
+
+        try {
+            dbAdapter.beginTransaction();
+
+            long setAlarmIdentifier = dbAdapter.createAlarm(when.getTimeInMillis(), taskId);
+            intent.putExtra(ReminderManager.EXTRA_SET_ALARM_ID, setAlarmIdentifier);
+            PendingIntent operation = getReminderPendingIntent(intent);
+            this.setAlarm(operation, when);
+
+            // No exceptions, all okay.
+            dbAdapter.setTransactionSuccessful();
+
+            Logger.log("An alarm reference has been stored at the database at " + GeneralUtils.format(when) + ". Alarm reference id: " + setAlarmIdentifier);
+        } finally {
+            dbAdapter.endTransaction();
+            dbAdapter.close();
         }
     }
 }

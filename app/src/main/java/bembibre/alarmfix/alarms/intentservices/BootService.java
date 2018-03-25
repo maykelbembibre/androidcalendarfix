@@ -8,6 +8,7 @@ import bembibre.alarmfix.alarms.ReminderManager;
 import bembibre.alarmfix.alarms.WakeReminderIntentService;
 import bembibre.alarmfix.core.SynchronizedWork;
 import bembibre.alarmfix.database.RemindersDbAdapter;
+import bembibre.alarmfix.userinterface.NotificationManager;
 
 /**
  * Class that notifies past alarms and sets the next alarm when the phone has just been turned on,

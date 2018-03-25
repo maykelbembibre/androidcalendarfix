@@ -73,7 +73,7 @@ public class ReminderEditActivity extends Activity {
         mBodyText = (EditText) findViewById(R.id.body);
 
         mRowId = savedInstanceState != null
-                ? savedInstanceState.getLong(RemindersDbAdapter.KEY_ROWID)
+                ? savedInstanceState.getLong(RemindersDbAdapter.REMINDERS_COLUMN_ROWID)
                 : null;
 
         registerButtonListenersAndSetDefaultText();
@@ -83,7 +83,7 @@ public class ReminderEditActivity extends Activity {
         if (mRowId == null) {
             Bundle extras = getIntent().getExtras();
             mRowId = extras != null
-                    ? extras.getLong(RemindersDbAdapter.KEY_ROWID)
+                    ? extras.getLong(RemindersDbAdapter.REMINDERS_COLUMN_ROWID)
                     : null;
         }
     }
@@ -121,14 +121,14 @@ public class ReminderEditActivity extends Activity {
             } else {
                 startManagingCursor(reminder);
                 mTitleText.setText(reminder.getString(
-                        reminder.getColumnIndexOrThrow(RemindersDbAdapter.KEY_TITLE)));
+                        reminder.getColumnIndexOrThrow(RemindersDbAdapter.REMINDERS_COLUMN_TITLE)));
                 mBodyText.setText(reminder.getString(
-                        reminder.getColumnIndexOrThrow(RemindersDbAdapter.KEY_BODY)));
-                alarmId = reminder.getLong(reminder.getColumnIndexOrThrow(RemindersDbAdapter.KEY_ALARM_ID));
+                        reminder.getColumnIndexOrThrow(RemindersDbAdapter.REMINDERS_COLUMN_BODY)));
+                alarmId = reminder.getLong(reminder.getColumnIndexOrThrow(RemindersDbAdapter.REMINDERS_COLUMN_ALARM_ID));
                 SimpleDateFormat dateTimeFormat = new SimpleDateFormat(GeneralUtils.DATE_TIME_FORMAT);
                 long reminderDateTime = reminder.getLong(
                         reminder.getColumnIndexOrThrow(
-                                RemindersDbAdapter.KEY_DATE_TIME));
+                                RemindersDbAdapter.REMINDERS_COLUMN_DATE_TIME));
                 mCalendar.setTime(new Date(reminderDateTime));
             }
         }
@@ -144,7 +144,7 @@ public class ReminderEditActivity extends Activity {
     @Override
     protected void onSaveInstanceState(Bundle outState) {
         super.onSaveInstanceState(outState);
-        outState.putLong(RemindersDbAdapter.KEY_ROWID, mRowId);
+        outState.putLong(RemindersDbAdapter.REMINDERS_COLUMN_ROWID, mRowId);
     }
 
     private void saveState() {

@@ -79,6 +79,14 @@ public class NotificationManager {
         }
     }
 
+    /**
+     * Makes a general notification that won't be closed if the user pushes it, but only if he
+     * deliberately closes it.
+     *
+     * @param title title.
+     * @param body body.
+     * @throws Exception
+     */
     public void makeGeneralNotification(String title, String body) throws Exception {
         this.makeNotification(null, title, body, false);
     }
@@ -109,7 +117,7 @@ public class NotificationManager {
         } else {
             notificationId = rowId;
             notificationIntent = new Intent(context, ReminderEditActivity.class);
-            notificationIntent.putExtra(RemindersDbAdapter.KEY_ROWID, rowId);
+            notificationIntent.putExtra(RemindersDbAdapter.REMINDERS_COLUMN_ROWID, rowId);
             long rowIdPrimitive = rowId;
             pi = PendingIntent.getActivity(context, (int)rowIdPrimitive, notificationIntent,
                     PendingIntent.FLAG_ONE_SHOT);

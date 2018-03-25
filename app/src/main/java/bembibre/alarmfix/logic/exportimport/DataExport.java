@@ -90,10 +90,10 @@ public class DataExport extends AsyncTask<Void, Float, Boolean> {
             long processedReminders = 0;
             while ((cursor != null) && (cursor.moveToFirst())) {
                 do {
-                    String title = cursor.getString(cursor.getColumnIndexOrThrow(RemindersDbAdapter.KEY_TITLE));
-                    String body = cursor.getString(cursor.getColumnIndexOrThrow(RemindersDbAdapter.KEY_BODY));
-                    Long dateTime = cursor.getLong(cursor.getColumnIndexOrThrow(RemindersDbAdapter.KEY_DATE_TIME));
-                    int notified = cursor.getInt(cursor.getColumnIndexOrThrow(RemindersDbAdapter.KEY_NOTIFIED));
+                    String title = cursor.getString(cursor.getColumnIndexOrThrow(RemindersDbAdapter.REMINDERS_COLUMN_TITLE));
+                    String body = cursor.getString(cursor.getColumnIndexOrThrow(RemindersDbAdapter.REMINDERS_COLUMN_BODY));
+                    Long dateTime = cursor.getLong(cursor.getColumnIndexOrThrow(RemindersDbAdapter.REMINDERS_COLUMN_DATE_TIME));
+                    int notified = cursor.getInt(cursor.getColumnIndexOrThrow(RemindersDbAdapter.REMINDERS_COLUMN_NOTIFIED));
                     boolean notifiedBoolean;
                     notifiedBoolean = notified == 1;
                     reminder = new JSONObject();

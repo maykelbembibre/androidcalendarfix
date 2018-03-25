@@ -5,13 +5,10 @@ import android.content.Intent;
 import android.database.Cursor;
 
 import java.util.Calendar;
-import java.util.Date;
 
-import bembibre.alarmfix.alarms.ReminderManager;
 import bembibre.alarmfix.database.RemindersDbAdapter;
 import bembibre.alarmfix.logging.Logger;
 import bembibre.alarmfix.models.DateTime;
-import bembibre.alarmfix.utils.GeneralUtils;
 
 /**
  * Class that has got the critical application core operations regarding reminders and alarms.
@@ -31,8 +28,8 @@ public class CoreOperations {
             if (cursor != null) {
                 if (cursor.moveToFirst()) {
                     Logger.log("A reminder with identifier " + rowId + " is going to be notified to the user.");
-                    reminderTitle = cursor.getString(cursor.getColumnIndexOrThrow(RemindersDbAdapter.KEY_TITLE));
-                    alarmId = cursor.getLong(cursor.getColumnIndexOrThrow(RemindersDbAdapter.KEY_ALARM_ID));
+                    reminderTitle = cursor.getString(cursor.getColumnIndexOrThrow(RemindersDbAdapter.REMINDERS_COLUMN_TITLE));
+                    alarmId = cursor.getLong(cursor.getColumnIndexOrThrow(RemindersDbAdapter.REMINDERS_COLUMN_ALARM_ID));
 
                     /*
                      * If the alarm identified of the database doesn't match with the received one,

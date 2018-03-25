@@ -54,6 +54,7 @@
     <string name="total_reminders">Recordatorios totales</string>
     <string name="progress">Progreso</string>
     <string name="service_error">No se puede ejecutar el servicio de la aplicación. Configura el teléfono para que deje ejecutarse a la aplicación y reinicia el teléfono.</string>
+    <string name="error_recovered">Algo ha detenido a esta aplicación a propósito y se ha recuperado, pero debes comprobar tus ajustes de energía para que tu teléfono no cierre esta aplicación para ahorrar batería.</string>
 
     <string name="yes">Sí</string>
     <string name="no">No</string>

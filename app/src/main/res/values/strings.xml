@@ -54,6 +54,7 @@
     <string name="total_reminders">Total reminders</string>
     <string name="progress">Progress</string>
     <string name="service_error">Unable to run application service. Configure your phone for allowing applications to run background services and restart the phone.</string>
+    <string name="error_recovered">Something has stopped this application on purpose and it has recovered itself. Please check your power management settings so this application doesn\'t get stopped for saving battery.</string>
 
     <string name="yes">Yes</string>
     <string name="no">No</string>

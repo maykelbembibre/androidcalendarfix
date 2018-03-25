@@ -86,6 +86,8 @@ public class ReminderListActivity extends ListActivity {
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M) {
             requestPermissions(new String[]{android.Manifest.permission.WRITE_EXTERNAL_STORAGE}, 1);
         }
+
+        SynchronizedWork.checkAlarmsHealth(this);
     }
 
     private void createYearSpinner() {
@@ -195,7 +197,7 @@ public class ReminderListActivity extends ListActivity {
         this.remindersCursor = mDbHelper.fetchAllReminders(year, month);
         startManagingCursor(remindersCursor);
         // Create an array to specify the fields we want (only the TITLE)
-        String[] from = new String[]{RemindersDbAdapter.KEY_TITLE, RemindersDbAdapter.KEY_DATE_TIME, RemindersDbAdapter.KEY_NOTIFIED};
+        String[] from = new String[]{RemindersDbAdapter.REMINDERS_COLUMN_TITLE, RemindersDbAdapter.REMINDERS_COLUMN_DATE_TIME, RemindersDbAdapter.REMINDERS_COLUMN_NOTIFIED};
         // and an array of the fields we want to bind in the view
         int[] to = new int[]{R.id.text1, R.id.text2, R.id.text3};
         // Now create a simple cursor adapter and set it to display
@@ -222,7 +224,7 @@ public class ReminderListActivity extends ListActivity {
     protected void onListItemClick(ListView l, View v, int position, long id) {
         super.onListItemClick(l, v, position, id);
         Intent i = new Intent(this, ReminderEditActivity.class);
-        i.putExtra(RemindersDbAdapter.KEY_ROWID, id);
+        i.putExtra(RemindersDbAdapter.REMINDERS_COLUMN_ROWID, id);
         startActivity(i);
     }
 

@@ -3,7 +3,6 @@ package bembibre.alarmfix.core;
 import android.content.Context;
 import android.content.DialogInterface;
 import android.content.Intent;
-import android.database.Cursor;
 import android.widget.Toast;
 
 import org.json.JSONArray;
@@ -26,7 +25,7 @@ import bembibre.alarmfix.logic.exportimport.DataImport;
 import bembibre.alarmfix.models.DataImportResultType;
 import bembibre.alarmfix.models.ImportedReminder;
 import bembibre.alarmfix.models.DataImportResult;
-import bembibre.alarmfix.models.DateTime;
+import bembibre.alarmfix.userinterface.NotificationManager;
 import bembibre.alarmfix.userinterface.UserInterfaceUtils;
 
 /**
@@ -43,14 +42,15 @@ public class SynchronizedWork {
     public synchronized static void reminderAlarmReceived(Context context, Intent intent) {
         try {
             AlarmChainManager alarmChainManager = new AlarmChainManager(context);
-            if ((intent.hasExtra(RemindersDbAdapter.KEY_ROWID)) && (intent.hasExtra(ReminderManager.EXTRA_ALARM_ID))) {
+            if ((intent.hasExtra(RemindersDbAdapter.REMINDERS_COLUMN_ROWID)) && (intent.hasExtra(ReminderManager.EXTRA_REMINDER_ALARM_ID))) {
                 Logger.log("The received alarm is for notifying a reminder and setting the next alarm.");
-                long rowId = intent.getExtras().getLong(RemindersDbAdapter.KEY_ROWID);
-                long alarmId = intent.getExtras().getLong(ReminderManager.EXTRA_ALARM_ID);
+                long rowId = intent.getExtras().getLong(RemindersDbAdapter.REMINDERS_COLUMN_ROWID);
+                long alarmId = intent.getExtras().getLong(ReminderManager.EXTRA_REMINDER_ALARM_ID);
                 CoreOperations.notifyReminder(context, rowId, alarmId);
             } else {
                 Logger.log("The received alarm is only for checking if there is a near future reminder.");
             }
+
             // In any case, we have to set the next alarm.
             alarmChainManager.setNextAlarm();
         } catch (Throwable t) {
@@ -64,7 +64,32 @@ public class SynchronizedWork {
      * system alarms for any upcoming reminder.
      */
     public synchronized static void phoneHasJustBeenTurnedOn(Context context) {
+        // All the alarms get deleted at database.
         new AlarmChainManager(context).setNextAlarm();
+    }
+
+    /**
+     * If there is any past alarm that has failed to go off because the application was stopped
+     * roughly by the system, this method resets all alarm stuff, sets next alarm, notifies
+     * every pending reminder and notifies the user so that he is aware of what happened.
+     *
+     * @param context the application's context.
+     */
+    public synchronized static void checkAlarmsHealth(Context context) {
+        if (new ReminderManager(context).checkAlarmsHealth()) {
+            Logger.log("Alarm health is allright because there isn't any unhandled alarm reference in the database that is earlier than now.");
+        } else {
+            // All the alarms get deleted at database.
+            new AlarmChainManager(context).setNextAlarm();
+
+            try {
+                new NotificationManager(context).makeGeneralNotification(context.getResources().getString(R.string.alert_dialog_title), context.getResources().getString(R.string.error_recovered));
+            } catch (Exception e) {
+
+            }
+
+            Logger.log("There has been an error because something prevented an alarm to work but the application has recovered itself.");
+        }
     }
 
     /**

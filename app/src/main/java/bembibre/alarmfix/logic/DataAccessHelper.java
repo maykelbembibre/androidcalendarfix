@@ -6,9 +6,6 @@ package bembibre.alarmfix.logic;
 
 import android.database.Cursor;
 
-import java.util.ArrayList;
-import java.util.List;
-
 import bembibre.alarmfix.database.RemindersDbAdapter;
 import bembibre.alarmfix.models.YearsMonthsAndReminders;
 
@@ -30,8 +27,8 @@ public class DataAccessHelper {
             cursor.moveToFirst();
             while (!cursor.isAfterLast()) {
                 int count = cursor.getInt(0);
-                int year = cursor.getInt(cursor.getColumnIndexOrThrow(RemindersDbAdapter.KEY_YEAR));
-                int month = cursor.getInt(cursor.getColumnIndexOrThrow(RemindersDbAdapter.KEY_MONTH));
+                int year = cursor.getInt(cursor.getColumnIndexOrThrow(RemindersDbAdapter.REMINDERS_COLUMN_YEAR));
+                int month = cursor.getInt(cursor.getColumnIndexOrThrow(RemindersDbAdapter.REMINDERS_COLUMN_MONTH));
                 System.out.println(year + ", " + month + ": " + count);
                 years.add(year, month, count);
                 cursor.moveToNext();
