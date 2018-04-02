@@ -20,7 +20,14 @@ import bembibre.alarmfix.models.Alarm;
  */
 
 public class RemindersDbAdapter {
-    private static final int DATABASE_VERSION = 1;
+
+    /**
+     * Versions.
+     * 1: first version.
+     * 2: added table "alarms". Some users with version 1 could already have that table because a
+     * logistic error.
+     */
+    private static final int DATABASE_VERSION = 2;
     private static final String DATABASE_NAME = "data";
 
     /*
@@ -117,11 +124,13 @@ public class RemindersDbAdapter {
                     + REMINDERS_COLUMN_YEAR + " integer not null, "
                     + REMINDERS_COLUMN_MONTH + " integer not null, "
                     + REMINDERS_COLUMN_DATE_TIME + " integer not null);";
+
     private static final String TABLE_ALARMS_CREATE =
-            "create table " + DATABASE_TABLE_ALARMS + " ("
+            "create table if not exists " + DATABASE_TABLE_ALARMS + " ("
                     + ALARMS_COLUMN_ROWID + " integer primary key autoincrement, "
                     + ALARMS_COLUMN_REMINDER_ID + " integer, "
                     + ALARMS_COLUMN_DATE_TIME + " integer not null);";
+
     private final Context mCtx;
 
     private static RemindersDbAdapter instance;
@@ -143,6 +152,12 @@ public class RemindersDbAdapter {
                               int newVersion) {
             // Not used, but you could upgrade the database with ALTER
             // Scripts. Use only ALTER statements that don't delete the current user data!
+
+            // When going from version 1 to 2, the alarms table could need to be created.
+            // Some users with version 1 could already have it due to a logistic error.
+            if ((oldVersion == 1) && (newVersion == DATABASE_VERSION)) {
+                db.execSQL(TABLE_ALARMS_CREATE);
+            }
         }
     }
 

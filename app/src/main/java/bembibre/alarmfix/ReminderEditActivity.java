@@ -25,6 +25,12 @@ import bembibre.alarmfix.utils.GeneralUtils;
 
 public class ReminderEditActivity extends Activity {
 
+    /**
+     * Flag for knowing if the saved instance state of this activity has got a row identifier of
+     * a reminder or doesn't.
+     */
+    private static final String SAVED_INSTANCE_STATE_HAS_ROW_ID = "has_row_id";
+
     private static final String DATE_FORMAT = "yyyy-MM-dd";
     private static final String TIME_FORMAT = "kk:mm";
 
@@ -73,7 +79,7 @@ public class ReminderEditActivity extends Activity {
         mBodyText = (EditText) findViewById(R.id.body);
 
         mRowId = savedInstanceState != null
-                ? savedInstanceState.getLong(RemindersDbAdapter.REMINDERS_COLUMN_ROWID)
+                ? this.getRowId(savedInstanceState)
                 : null;
 
         registerButtonListenersAndSetDefaultText();
@@ -144,7 +150,7 @@ public class ReminderEditActivity extends Activity {
     @Override
     protected void onSaveInstanceState(Bundle outState) {
         super.onSaveInstanceState(outState);
-        outState.putLong(RemindersDbAdapter.REMINDERS_COLUMN_ROWID, mRowId);
+        this.setRowId(outState);
     }
 
     private void saveState() {
@@ -249,5 +255,22 @@ public class ReminderEditActivity extends Activity {
         SimpleDateFormat timeFormat = new SimpleDateFormat(TIME_FORMAT);
         String timeForButton = timeFormat.format(mCalendar.getTime());
         mTimeButton.setText(timeForButton);
+    }
+
+    private void setRowId(Bundle savedInstanceState) {
+        savedInstanceState.putBoolean(SAVED_INSTANCE_STATE_HAS_ROW_ID, this.mRowId != null);
+        if (this.mRowId != null) {
+            savedInstanceState.putLong(RemindersDbAdapter.REMINDERS_COLUMN_ROWID, this.mRowId);
+        }
+    }
+
+    private Long getRowId(Bundle savedInstanceState) {
+        Long result;
+        if (savedInstanceState.getBoolean(SAVED_INSTANCE_STATE_HAS_ROW_ID, false)) {
+            result = savedInstanceState.getLong(RemindersDbAdapter.REMINDERS_COLUMN_ROWID);
+        } else {
+            result = null;
+        }
+        return result;
     }
 }
