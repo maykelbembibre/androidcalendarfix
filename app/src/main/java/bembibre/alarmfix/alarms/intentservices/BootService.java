@@ -25,7 +25,7 @@ public class BootService extends WakeReminderIntentService {
 
     @Override
     protected void doReminderWork(Intent intent) {
-        SynchronizedWork.phoneHasJustBeenTurnedOn(this);
+        // SynchronizedWork.phoneHasJustBeenTurnedOn(this);
         mHandler.post(new DisplayToast(this, this.getString(R.string.boot_received)));
     }
 }

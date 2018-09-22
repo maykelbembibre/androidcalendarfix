@@ -29,9 +29,9 @@ public class OnAlarmReceiver extends BroadcastReceiver {
             long alarmId = firstIntent.getExtras().getLong(ReminderManager.EXTRA_REMINDER_ALARM_ID);
             secondIntent.putExtra(ReminderManager.EXTRA_REMINDER_ALARM_ID, alarmId);
         }
-        if (firstIntent.hasExtra(ReminderManager.EXTRA_SET_ALARM_ID)) {
-            long extra = firstIntent.getExtras().getLong(ReminderManager.EXTRA_SET_ALARM_ID);
-            secondIntent.putExtra(ReminderManager.EXTRA_SET_ALARM_ID, extra);
+        if (firstIntent.hasExtra(ReminderManager.EXTRA_PENDING_ALARM_REFERENCE_ID)) {
+            long extra = firstIntent.getExtras().getLong(ReminderManager.EXTRA_PENDING_ALARM_REFERENCE_ID);
+            secondIntent.putExtra(ReminderManager.EXTRA_PENDING_ALARM_REFERENCE_ID, extra);
         }
         context.startService(secondIntent);
     }

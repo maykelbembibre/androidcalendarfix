@@ -22,7 +22,7 @@ public class DisplayToast implements Runnable {
 
     public void run(){
         try {
-            new NotificationManager(this.mContext).makeGeneralNotification(this.mContext.getResources().getString(R.string.info_dialog_title), mText);
+            new NotificationManager(this.mContext).makeAlarmsConfiguredNotification(this.mContext.getResources().getString(R.string.info_dialog_title), mText);
         } catch (Exception e) {
             Toast.makeText(mContext, mText, Toast.LENGTH_SHORT).show();
             Logger.log("Unknown error accessing to notifications service.", e);

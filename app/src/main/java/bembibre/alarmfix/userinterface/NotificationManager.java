@@ -29,6 +29,20 @@ public class NotificationManager {
     private static final String CHANNEL_ONE_NAME = "Channel One";
     private static final String NOTIFICATION_CHANNEL_DESCRIPTION = "The notification channel for Alarm Fix.";
 
+    /*
+     * In Android, when you launch two notifications with the same identifier, the second one
+     * overrides the first one. So, we are using different identifiers for each notification.
+     * If the notification is about a user reminder, it takes the identifier for the reminder, an
+     * integer autoincremental number starting from 1.
+     *
+     * If the notification is for other purpose, it takes 0, -1, -2, -3 negative numbers and so on.
+     * They will never match a reminder identifier (1, 2, 3, ...).
+     */
+    private static final int NOTIFICATION_REASON_MULTIPLE = 0;
+    private static final int NOTIFICATION_REASON_BOOT_ERROR = -1;
+    private static final int NOTIFICATION_REASON_ALARMS_CONFIGURED = -2;
+    private static final int NOTIFICATION_REASON_ALARM_FIRE_ERROR = -3;
+
     private Context context;
 
     public NotificationManager(Context context) {
@@ -44,7 +58,7 @@ public class NotificationManager {
      * @throws Exception when Android refuses to give access to the notifications service.
      */
     public void notifySingleReminder(long rowId, String reminderTitle) throws Exception {
-        makeNotification(rowId, this.context.getResources().getString(R.string.notifiy_new_task_title), reminderTitle, true);
+        makeNotification(rowId, this.context.getResources().getString(R.string.notifiy_new_task_title), reminderTitle, true, 0);
 
         Logger.log("A notification has just been thrown for a received alarm.");
     }
@@ -74,9 +88,40 @@ public class NotificationManager {
                 string = R.string.notify_multiple_reminders_title_plural;
             }
             String notificationTitle = this.context.getResources().getString(string, remindersNumber);
-            this.makeNotification(null, notificationTitle, notificationBody.toString(), true);
+            this.makeNotification(null, notificationTitle, notificationBody.toString(), true, NOTIFICATION_REASON_MULTIPLE);
             Logger.log("A notification has just been thrown for multiple reminders.");
         }
+    }
+
+    /**
+     * Notifies an error that affects the application when the phone is turned on and it can't set
+     * all the alarms that have been erased when the phone turned off.
+     * @param title
+     * @param body
+     * @throws Exception
+     */
+    public void makeBootErrorNotification(String title, String body) throws Exception {
+        this.makeGeneralNotification(title, body, NOTIFICATION_REASON_BOOT_ERROR);
+    }
+
+    /**
+     * Notifies the user that the alarms have been properly configured when the phone has turned on.
+     * @param title
+     * @param body
+     * @throws Exception
+     */
+    public void makeAlarmsConfiguredNotification(String title, String body) throws Exception {
+        this.makeGeneralNotification(title, body, NOTIFICATION_REASON_ALARMS_CONFIGURED);
+    }
+
+    /**
+     * Notifies the user that the application found alarms that weren't triggered on time.
+     * @param title
+     * @param body
+     * @throws Exception
+     */
+    public void makeAlarmErrorNotification(String title, String body) throws Exception {
+        this.makeGeneralNotification(title, body, NOTIFICATION_REASON_ALARM_FIRE_ERROR);
     }
 
     /**
@@ -87,8 +132,8 @@ public class NotificationManager {
      * @param body body.
      * @throws Exception
      */
-    public void makeGeneralNotification(String title, String body) throws Exception {
-        this.makeNotification(null, title, body, false);
+    private void makeGeneralNotification(String title, String body, int reason) throws Exception {
+        this.makeNotification(null, title, body, false, reason);
     }
 
     /**
@@ -100,7 +145,7 @@ public class NotificationManager {
      *
      * @throws Exception when Android refuses to give access to the notifications service.
      */
-    private void makeNotification(Long rowId, String title, String body, boolean autoCancel) throws Exception {
+    private void makeNotification(Long rowId, String title, String body, boolean autoCancel, int reason) throws Exception {
         android.app.NotificationManager mgr = (android.app.NotificationManager)context.getSystemService(NOTIFICATION_SERVICE);
         if (mgr == null) {
             throw new Exception("Android gives no access to the notifications service.");
@@ -110,7 +155,7 @@ public class NotificationManager {
         long notificationId;
         PendingIntent pi;
         if (rowId == null) {
-            notificationId = 0;
+            notificationId = reason;
             notificationIntent = new Intent(context, ReminderListActivity.class);
             pi = PendingIntent.getActivity(context, 0, notificationIntent,
                     PendingIntent.FLAG_UPDATE_CURRENT);

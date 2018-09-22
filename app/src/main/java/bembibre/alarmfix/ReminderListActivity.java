@@ -87,6 +87,8 @@ public class ReminderListActivity extends ListActivity {
             requestPermissions(new String[]{android.Manifest.permission.WRITE_EXTERNAL_STORAGE}, 1);
         }
 
+        registerReceiver(broadcastBufferReceiver, new IntentFilter(CoreOperations.BROADCAST_BUFFER_SEND_CODE));
+
         SynchronizedWork.checkAlarmsHealth(this);
     }
 
@@ -351,25 +353,36 @@ public class ReminderListActivity extends ListActivity {
     private BroadcastReceiver broadcastBufferReceiver = new BroadcastReceiver() {
         @Override
         public void onReceive(Context context, Intent bufferIntent) {
+            Logger.log("Activity update event received.");
             ReminderListActivity.this.createSpinnersAndFillData();
         }
     };
 
+    /**
+     * If the user is now seeing this activity, this method will make it update all things that
+     * the user is seeing.
+     * @param context
+     */
+    public static void updateActivity(Context context) {
+        Intent bufferIntentSendCode = new Intent(CoreOperations.BROADCAST_BUFFER_SEND_CODE);
+        context.sendBroadcast(bufferIntentSendCode);
+        Logger.log("Activity update event fired.");
+    }
+
     @Override
     public void onResume() {
         super.onResume();
-        registerReceiver(broadcastBufferReceiver, new IntentFilter(CoreOperations.BROADCAST_BUFFER_SEND_CODE));
     }
 
     @Override
     public void onPause() {
         super.onPause();
-        this.unregisterReceiver(broadcastBufferReceiver);
     }
 
     @Override
     public void onDestroy() {
         super.onDestroy();
         this.mDbHelper.close();
+        this.unregisterReceiver(broadcastBufferReceiver);
     }
 }

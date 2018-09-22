@@ -1,6 +1,7 @@
 package bembibre.alarmfix.core;
 
 import android.content.Context;
+import android.content.Intent;
 import android.database.Cursor;
 
 import java.util.ArrayList;
@@ -8,6 +9,7 @@ import java.util.Calendar;
 import java.util.Date;
 import java.util.List;
 
+import bembibre.alarmfix.ReminderListActivity;
 import bembibre.alarmfix.alarms.AlarmException;
 import bembibre.alarmfix.alarms.ReminderManager;
 import bembibre.alarmfix.database.RemindersDbAdapter;
@@ -31,6 +33,11 @@ class AlarmChainManager {
         this.context = context;
     }
 
+    /**
+     * Flow to set the next alarm of the alarm chain:
+     * 1. Notify every past reminder just in case there are some, for instance because of a failure.
+     * 2. Set the alarm either for the next reminder or for the next reminder check.
+     */
     void setNextAlarm() {
         boolean alarmSet = false;
         ReminderManager reminderManager = new ReminderManager(this.context);
@@ -88,6 +95,12 @@ class AlarmChainManager {
                 }
                 try {
                     new NotificationManager(context).notifyMultipleReminders(pendingReminders);
+
+                    /*
+                     * Notice the reminders list activity (just in case it is open right now) to update the
+                     * reminders list.
+                     */
+                    ReminderListActivity.updateActivity(context);
                 } catch (Exception e) {
                     Logger.log("Unable to notify pending reminders because there was an exception.", e);
                 }

@@ -32,12 +32,12 @@ public class ReminderService extends WakeReminderIntentService {
         RemindersDbAdapter dbAdapter = RemindersDbAdapter.getInstance(this);
         dbAdapter.open();
         try {
-            if (intent.hasExtra(ReminderManager.EXTRA_SET_ALARM_ID)) {
+            if (intent.hasExtra(ReminderManager.EXTRA_PENDING_ALARM_REFERENCE_ID)) {
                 /*
                  * It is needed to delete the reference to the alarm that has gone off and was
                  * stored into the database.
                  */
-                long setAlarmId = intent.getExtras().getLong(ReminderManager.EXTRA_SET_ALARM_ID);
+                long setAlarmId = intent.getExtras().getLong(ReminderManager.EXTRA_PENDING_ALARM_REFERENCE_ID);
                 dbAdapter.deleteAlarm(setAlarmId);
 
                 Logger.log("An alarm reference has been deleted from the database at " + GeneralUtils.format(Calendar.getInstance()) + ". Alarm reference id: " + setAlarmId);

@@ -21,6 +21,11 @@ public class Alarm {
         this.dateAndTime = dateAndTime;
     }
 
+    /**
+     * Returns the moment in which the alarm has to be triggered.
+     *
+     * @return the moment in which the alarm has to be triggered.
+     */
     public long getTime() {
         return this.dateAndTime.getTime();
     }

@@ -33,7 +33,7 @@ public class OnBootReceiver extends BroadcastReceiver {
         } catch (Throwable t) {
             Logger.log("CRITICAL FAILURE.", t);
             try {
-                new NotificationManager(context).makeGeneralNotification(context.getResources().getString(R.string.alert_dialog_title), context.getResources().getString(R.string.service_error));
+                new NotificationManager(context).makeBootErrorNotification(context.getResources().getString(R.string.alert_dialog_title), context.getResources().getString(R.string.service_error));
                 Logger.log("Notified.");
             } catch (Exception e) {
                 Logger.log("Unable to notify.", e);

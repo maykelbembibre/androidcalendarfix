@@ -6,6 +6,7 @@ import android.database.Cursor;
 
 import java.util.Calendar;
 
+import bembibre.alarmfix.ReminderListActivity;
 import bembibre.alarmfix.database.RemindersDbAdapter;
 import bembibre.alarmfix.logging.Logger;
 import bembibre.alarmfix.models.DateTime;
@@ -57,8 +58,7 @@ public class CoreOperations {
          * Notice the reminders list activity (just in case it is open right now) to update the
          * reminders list.
          */
-        Intent bufferIntentSendCode = new Intent(BROADCAST_BUFFER_SEND_CODE);
-        context.sendBroadcast(bufferIntentSendCode);
+        ReminderListActivity.updateActivity(context);
     }
 
     /**
@@ -104,8 +104,8 @@ public class CoreOperations {
     }
 
     /**
-     * Returns as milliseconds since the Epoch the date and time of an instant that is some minutes
-     * away from now.
+     * Returns as milliseconds since the Epoch the date and time of an instant that is slightly
+     * later from now.
      */
     public static long getNowDateTimeWithinAWhile() {
         Calendar nowCalendar = Calendar.getInstance();

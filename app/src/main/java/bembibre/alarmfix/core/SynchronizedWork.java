@@ -83,7 +83,7 @@ public class SynchronizedWork {
             new AlarmChainManager(context).setNextAlarm();
 
             try {
-                new NotificationManager(context).makeGeneralNotification(context.getResources().getString(R.string.alert_dialog_title), context.getResources().getString(R.string.error_recovered));
+                new NotificationManager(context).makeAlarmErrorNotification(context.getResources().getString(R.string.alert_dialog_title), context.getResources().getString(R.string.error_recovered));
             } catch (Exception e) {
 
             }

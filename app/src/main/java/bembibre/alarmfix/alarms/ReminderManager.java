@@ -34,9 +34,13 @@ public class ReminderManager {
 
     /**
      * This is the key that identifies a metadata item that is attached to the intent of an alarm of
-     * a reminder for keeping track into the database of the alarms that are set and pending.
+     * a reminder where that item represents the database identifier of a row of the alarms table,
+     * in which this application saves a row for every alarm set in the operating system which is
+     * pending to trigger. This table is used for detecting failures, because every alarm that
+     * triggers properly deletes its associated row from this table, so, if there is a row associated
+     * to a past alarm, that means that its alarm wasn't triggered.
      */
-    public static final String EXTRA_SET_ALARM_ID = "extra_set_alarm_id";
+    public static final String EXTRA_PENDING_ALARM_REFERENCE_ID = "extra_set_alarm_id";
 
     private Context mContext;
     private AlarmManager mAlarmManager;
@@ -50,7 +54,7 @@ public class ReminderManager {
     /**
      * Part of the code that is responsible for setting an alarm.
      *
-     * @param taskId  data base identifier of the reminder.
+     * @param taskId  database identifier of the reminder.
      * @param alarmId number that helps distinguishing each one of the alarms set for a same reminder.
      * @param when    when.
      */
@@ -82,7 +86,7 @@ public class ReminderManager {
     /**
      * Unsets any alarm either for reminder or for next alarm check that was set through this class.
      *
-     * Also, deletes all references to that alarms that could be stored at database.
+     * Also, deletes all references to those alarms that could be stored at database.
      */
     public void unsetAlarm() {
         RemindersDbAdapter dbAdapter = RemindersDbAdapter.getInstance(this.mContext);
@@ -114,7 +118,7 @@ public class ReminderManager {
      * past alarm that has failed to go off in time.
      *
      * Note that nowadays almost every phone includes a fucking power manager that prevents alarms
-     * off applications to go off because it is thought that that saves battery.
+     * of applications to go off because it is thought that it saves battery.
      *
      * @return true if there isn't any past alarm that failed to go off.
      */
@@ -124,15 +128,20 @@ public class ReminderManager {
         RemindersDbAdapter dbAdapter = RemindersDbAdapter.getInstance(this.mContext);
         dbAdapter.open();
 
+        Logger.log("Checking alarms health...");
+
         try {
             Alarm earliestAlarm = dbAdapter.fetchEarliestAlarm();
             if (earliestAlarm == null) {
+                Logger.log("There isn't any alarm stored in the database (alarms in the database can be either for reminders created by the user or for periodic tasks of the application itself to check for future user reminders).");
                 result = true;
             } else {
                 long limit = new Date().getTime() - ALARM_MAX_DELAY;
                 if (earliestAlarm.getTime() < limit) {
+                    Logger.log("There is a pending alarm reference in the database that is earlier than now so there has been a failure.");
                     result = false;
                 } else {
+                    Logger.log("The earliest alarm in the database is for the future so everything is all right.");
                     result = true;
                 }
             }
@@ -193,7 +202,7 @@ public class ReminderManager {
             dbAdapter.beginTransaction();
 
             long setAlarmIdentifier = dbAdapter.createAlarm(when.getTimeInMillis(), taskId);
-            intent.putExtra(ReminderManager.EXTRA_SET_ALARM_ID, setAlarmIdentifier);
+            intent.putExtra(ReminderManager.EXTRA_PENDING_ALARM_REFERENCE_ID, setAlarmIdentifier);
             PendingIntent operation = getReminderPendingIntent(intent);
             this.setAlarm(operation, when);
 
