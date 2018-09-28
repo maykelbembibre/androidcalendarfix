@@ -8,14 +8,13 @@ import bembibre.alarmfix.logging.Logger;
 import bembibre.alarmfix.userinterface.NotificationManager;
 
 /**
- * Created by Max Power on 16/12/2017.
+ * Class needed to display in a different thread the notification of alarms configured.
  */
-
-public class DisplayToast implements Runnable {
+public class AlarmsConfiguredNotificationRunnable implements Runnable {
     private final Context mContext;
     String mText;
 
-    public DisplayToast(Context mContext, String text){
+    public AlarmsConfiguredNotificationRunnable(Context mContext, String text){
         this.mContext = mContext;
         mText = text;
     }

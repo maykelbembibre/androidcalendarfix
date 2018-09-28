@@ -4,11 +4,8 @@ import android.content.Intent;
 import android.os.Handler;
 
 import bembibre.alarmfix.R;
-import bembibre.alarmfix.alarms.ReminderManager;
 import bembibre.alarmfix.alarms.WakeReminderIntentService;
 import bembibre.alarmfix.core.SynchronizedWork;
-import bembibre.alarmfix.database.RemindersDbAdapter;
-import bembibre.alarmfix.userinterface.NotificationManager;
 
 /**
  * Class that notifies past alarms and sets the next alarm when the phone has just been turned on,
@@ -16,6 +13,10 @@ import bembibre.alarmfix.userinterface.NotificationManager;
  */
 public class BootService extends WakeReminderIntentService {
 
+    /**
+     * This is needed because for some reason the notification that this class shows needs to be
+     * managed in a different thread.
+     */
     Handler mHandler;
 
     public BootService() {
@@ -25,7 +26,7 @@ public class BootService extends WakeReminderIntentService {
 
     @Override
     protected void doReminderWork(Intent intent) {
-        // SynchronizedWork.phoneHasJustBeenTurnedOn(this);
-        mHandler.post(new DisplayToast(this, this.getString(R.string.boot_received)));
+        SynchronizedWork.phoneHasJustBeenTurnedOn(this);
+        mHandler.post(new AlarmsConfiguredNotificationRunnable(this, this.getString(R.string.boot_received)));
     }
 }
