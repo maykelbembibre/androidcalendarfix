@@ -10,4 +10,5 @@ Settings > Battery > Energy management > Put Alarm Fix into the whitelist, i.e. 
 Xiaomi (2 actions)
 
 Settings > Battery > Battery Saver > Choose apps > Alarm Fix > No restrictions
+
 Settings > Permissions > Autostart > Alarm Fix > Permission granted
